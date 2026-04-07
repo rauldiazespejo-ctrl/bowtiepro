@@ -43,3 +43,9 @@ body {
   stroke: #52525b;
   stroke-width: 2;
 }
+
+.react-flow__node.selected .rounded-2xl {
+  box-shadow:
+    0 0 0 2px rgb(139 92 246 / 0.65),
+    0 12px 40px rgb(0 0 0 / 0.45);
+}

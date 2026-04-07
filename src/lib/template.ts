@@ -1,4 +1,11 @@
-import type { Edge, Node } from '@xyflow/react'
+import { MarkerType, type Edge, type Node } from '@xyflow/react'
+
+const arrow = {
+  type: MarkerType.ArrowClosed,
+  color: '#71717a',
+  width: 18,
+  height: 18,
+} as const
 
 /** Plantilla bowtie inicial: amenaza → barreras preventivas → evento → barreras mitigadoras → consecuencias */
 export function createDefaultTemplate(): { nodes: Node[]; edges: Edge[] } {
@@ -54,13 +61,13 @@ export function createDefaultTemplate(): { nodes: Node[]; edges: Edge[] } {
   ]
 
   const edges: Edge[] = [
-    { id: 'h1-bp1', source: 'h1', target: 'bp1', animated: true },
-    { id: 'bp1-bp2', source: 'bp1', target: 'bp2', animated: true },
-    { id: 'bp2-e1', source: 'bp2', target: 'e1', animated: true },
-    { id: 'e1-bm1', source: 'e1', target: 'bm1', animated: true },
-    { id: 'bm1-bm2', source: 'bm1', target: 'bm2', animated: true },
-    { id: 'bm2-c1', source: 'bm2', target: 'c1', animated: true },
-    { id: 'bm2-c2', source: 'bm2', target: 'c2', animated: true },
+    { id: 'h1-bp1', source: 'h1', target: 'bp1', animated: true, markerEnd: { ...arrow } },
+    { id: 'bp1-bp2', source: 'bp1', target: 'bp2', animated: true, markerEnd: { ...arrow } },
+    { id: 'bp2-e1', source: 'bp2', target: 'e1', animated: true, markerEnd: { ...arrow } },
+    { id: 'e1-bm1', source: 'e1', target: 'bm1', animated: true, markerEnd: { ...arrow } },
+    { id: 'bm1-bm2', source: 'bm1', target: 'bm2', animated: true, markerEnd: { ...arrow } },
+    { id: 'bm2-c1', source: 'bm2', target: 'c1', animated: true, markerEnd: { ...arrow } },
+    { id: 'bm2-c2', source: 'bm2', target: 'c2', animated: true, markerEnd: { ...arrow } },
   ]
 
   return { nodes, edges }
@@ -104,9 +111,9 @@ export function expandWithAdditionalPath(
 
   const newEdges: Edge[] = [
     ...edges,
-    { id: `${hId}-${bpId}`, source: hId, target: bpId, animated: true },
-    { id: `${bpId}-${eventId}`, source: bpId, target: eventId, animated: true },
-    { id: `${eventId}-${bmId}`, source: eventId, target: bmId, animated: true },
+    { id: `${hId}-${bpId}`, source: hId, target: bpId, animated: true, markerEnd: { ...arrow } },
+    { id: `${bpId}-${eventId}`, source: bpId, target: eventId, animated: true, markerEnd: { ...arrow } },
+    { id: `${eventId}-${bmId}`, source: eventId, target: bmId, animated: true, markerEnd: { ...arrow } },
   ]
 
   if (firstConsequence) {
@@ -115,6 +122,7 @@ export function expandWithAdditionalPath(
       source: bmId,
       target: firstConsequence.id,
       animated: true,
+      markerEnd: { ...arrow },
     })
   }
 
