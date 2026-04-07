@@ -25,6 +25,7 @@ import {
   Camera,
   ChevronDown,
   Download,
+  FileDown,
   HelpCircle,
   LayoutGrid,
   Plus,
@@ -48,7 +49,7 @@ import { layoutBowtie } from '../lib/layout'
 import { loadDiagram, saveDiagram } from '../lib/storage'
 import { createDefaultTemplate, expandWithAdditionalPath } from '../lib/template'
 import { createStudioNode, type StudioNodeType } from '../lib/nodeFactory'
-import { validateDiagram } from '../lib/validateDiagram'
+import { validateDiagram, type DiagramValidation } from '../lib/validateDiagram'
 import { useDiagramHistory } from '../hooks/useDiagramHistory'
 import { cn } from '../lib/cn'
 
@@ -164,6 +165,46 @@ function ExportPngControl({ onToast }: { onToast: (msg: string) => void }) {
   )
 }
 
+function ExportPdfControl({
+  onToast,
+  validation,
+}: {
+  onToast: (msg: string) => void
+  validation: DiagramValidation
+}) {
+  const { fitView } = useReactFlow()
+
+  const run = useCallback(async () => {
+    const vp = document.querySelector('.react-flow__viewport') as HTMLElement | null
+    if (!vp) {
+      onToast('No se encontró el lienzo')
+      return
+    }
+    try {
+      onToast('Generando PDF…')
+      await fitView({ padding: 0.15, duration: 200 })
+      await new Promise((r) => setTimeout(r, 320))
+      const { exportBowtiePdf } = await import('../lib/exportPdf')
+      await exportBowtiePdf(vp, validation)
+      onToast('PDF descargado')
+    } catch {
+      onToast('Error al generar PDF')
+    }
+  }, [fitView, onToast, validation])
+
+  return (
+    <button
+      type="button"
+      onClick={() => void run()}
+      className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-950/30 px-3 py-2 text-xs font-medium text-red-100 shadow-lg backdrop-blur hover:bg-red-950/50"
+      aria-label="Exportar informe PDF"
+    >
+      <FileDown className="size-4 text-red-400" />
+      PDF
+    </button>
+  )
+}
+
 function FlowToolbarInner({
   user,
   onToast,
@@ -177,6 +218,7 @@ function FlowToolbarInner({
   canUndo,
   canRedo,
   onOpenShortcuts,
+  validation,
 }: {
   user: SessionUser | null
   onToast: (msg: string) => void
@@ -190,6 +232,7 @@ function FlowToolbarInner({
   canUndo: boolean
   canRedo: boolean
   onOpenShortcuts: () => void
+  validation: DiagramValidation
 }) {
   const { screenToFlowPosition } = useReactFlow()
 
@@ -308,6 +351,7 @@ function FlowToolbarInner({
           Camino
         </button>
         <ExportPngControl onToast={onToast} />
+        <ExportPdfControl onToast={onToast} validation={validation} />
         <button type="button" onClick={exportJson} className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800">
           <Download className="size-4 text-emerald-400" />
           JSON
@@ -532,6 +576,7 @@ export function FlowWorkspace({
           canUndo={canUndo}
           canRedo={canRedo}
           onOpenShortcuts={() => setShortcutsOpen(true)}
+          validation={validation}
         />
 
         <Panel position="bottom-left" className="m-3 flex max-w-[min(100%-1.5rem,320px)] flex-col gap-2">

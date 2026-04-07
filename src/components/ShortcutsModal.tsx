@@ -7,6 +7,7 @@ const rows: [string, string][] = [
   ['Guardar (ya automático)', 'Ctrl + S'],
   ['Eliminar selección', 'Suprimir o Backspace'],
   ['Editar texto de nodo', 'Doble clic en el texto'],
+  ['Exportar informe PDF', 'Botón PDF (resumen + diagrama)'],
   ['Atajos', '? o Mayús + /'],
 ]
 

@@ -7,6 +7,7 @@
     "build:netlify": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build -c vite.netlify.config.ts && vite build -c vite.client.config.ts",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
+    "deploy:netlify": "npm run build:netlify && npx netlify-cli deploy --prod --dir=dist --functions=netlify/functions",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "build:client": "vite build -c vite.client.config.ts"
   },
@@ -15,6 +16,7 @@
     "clsx": "^2.1.1",
     "hono": "^4.12.12",
     "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.7.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
