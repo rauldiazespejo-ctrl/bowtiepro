@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, 'Segoe UI', Roboto, Ubuntu, sans-serif;
+  background: #030712;
+  color: #e4e4e7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* React Flow — tono acorde al tema */
+.react-flow__background {
+  --xy-background-pattern-color-props: #27272a;
+}
+
+.react-flow__minimap {
+  @apply rounded-lg border border-zinc-700/80 bg-zinc-900/95;
+}
+
+.react-flow__controls {
+  @apply overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-900/95 shadow-xl;
+}
+
+.react-flow__controls-button {
+  @apply border-zinc-700/80 bg-zinc-900 fill-zinc-300;
+}
+
+.react-flow__controls-button:hover {
+  @apply bg-zinc-800;
+}
+
+.react-flow__edge-path {
+  stroke: #52525b;
+  stroke-width: 2;
+}
