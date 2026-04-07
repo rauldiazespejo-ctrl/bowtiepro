@@ -29,3 +29,6 @@ logs/
 # Cloudflare Wrangler
 .wrangler/
 dist/
+
+# Netlify Functions (generadas en build; no versionar)
+netlify/functions/
