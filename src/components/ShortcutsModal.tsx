@@ -15,7 +15,7 @@ export function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () =
   if (!open) return null
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="shortcuts-title"
@@ -23,13 +23,11 @@ export function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () =
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
       <div
-        className={cn(
-          'max-h-[85vh] w-full max-w-md overflow-auto rounded-md border border-zinc-700 bg-zinc-900 p-6 shadow-lg',
-        )}
+        className={cn('studio-chrome max-h-[85vh] w-full max-w-md overflow-auto rounded-xl p-6')}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id="shortcuts-title" className="text-lg font-semibold text-white">
+          <h2 id="shortcuts-title" className="text-lg font-semibold tracking-tight text-zinc-50">
             Atajos de teclado
           </h2>
           <button

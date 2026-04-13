@@ -8,7 +8,7 @@ export async function exportBowtiePdf(
   validation: DiagramValidation,
 ): Promise<void> {
   const dataUrl = await toPng(viewportEl, {
-    backgroundColor: '#0e1016',
+    backgroundColor: '#0c0f14',
     pixelRatio: 2,
     cacheBust: true,
   })

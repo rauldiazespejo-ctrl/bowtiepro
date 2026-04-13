@@ -71,7 +71,7 @@ function NodeShell({
   return (
     <div
       className={cn(
-        'bowtie-node min-w-[168px] max-w-[240px] rounded-lg border border-zinc-700/90 bg-zinc-950/95 px-3.5 py-2.5 shadow-sm ring-1 ring-black/20',
+        'bowtie-node min-w-[168px] max-w-[240px] rounded-lg border border-zinc-700/90 bg-zinc-950/95 px-3.5 py-2.5 ring-1 ring-black/25 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.05)]',
         className,
       )}
     >

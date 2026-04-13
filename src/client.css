@@ -2,6 +2,12 @@
 
 :root {
   color-scheme: dark;
+  --studio-bg: #090b0f;
+  --studio-canvas: #0c0f14;
+  --studio-surface: #11141b;
+  --studio-elevated: #161a22;
+  --studio-border: rgba(63, 63, 70, 0.45);
+  --studio-muted: #71717a;
 }
 
 html,
@@ -19,14 +25,15 @@ body {
     'Helvetica Neue',
     Arial,
     sans-serif;
-  background: #0b0d11;
+  background: var(--studio-bg);
   color: #e4e4e7;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* React Flow — aspecto de lienzo técnico */
 .studio-flow .react-flow__background {
-  background-color: #0e1016 !important;
+  background-color: var(--studio-canvas) !important;
 }
 
 .studio-flow .react-flow__minimap {
@@ -52,6 +59,18 @@ body {
 
 .studio-flow .react-flow__node.selected .bowtie-node {
   box-shadow:
-    0 0 0 1px rgb(148 163 184 / 0.45),
-    0 0 0 3px rgb(148 163 184 / 0.12);
+    0 0 0 1px rgb(148 163 184 / 0.35),
+    0 0 0 4px rgb(148 163 184 / 0.08),
+    0 12px 28px rgb(0 0 0 / 0.35);
+}
+
+/* Tarjetas flotantes del lienzo */
+.studio-chrome {
+  border: 1px solid var(--studio-border);
+  background: linear-gradient(165deg, rgb(22 26 34 / 0.92) 0%, rgb(14 16 22 / 0.94) 100%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.04) inset,
+    0 12px 40px rgb(0 0 0 / 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }

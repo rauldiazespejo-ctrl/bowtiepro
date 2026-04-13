@@ -10,6 +10,7 @@
     "deploy": "npm run build && wrangler pages deploy",
     "deploy:netlify": "npm run build:netlify && npx netlify-cli deploy --prod --dir=dist --functions=netlify/functions",
     "deploy:vercel": "npm run build:vercel && npx vercel deploy --prebuilt",
+    "respaldar": "git add -A && git diff --cached --quiet || (git commit -m \"chore: respaldo $(date -u +%Y-%m-%d)\" && git push origin HEAD)",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "build:client": "vite build -c vite.client.config.ts"
   },

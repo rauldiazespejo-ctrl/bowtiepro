@@ -69,6 +69,13 @@ const NODE_TYPE_LABELS: Record<string, string> = {
   consequence: 'Consecuencia',
 }
 
+const toolBtn =
+  'inline-flex items-center gap-1.5 rounded-md border border-zinc-600/75 bg-zinc-900/65 px-2.5 py-1.5 text-xs font-medium text-zinc-200 shadow-sm transition-colors hover:border-zinc-500 hover:bg-zinc-800/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/35 disabled:cursor-not-allowed disabled:opacity-40'
+
+function ToolbarSep() {
+  return <span className="hidden h-6 w-px shrink-0 bg-zinc-600/45 sm:block" aria-hidden />
+}
+
 type SessionUser = { name: string; role: string }
 
 function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
@@ -87,7 +94,7 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
+        className={toolBtn}
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -103,7 +110,7 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
             aria-label="Cerrar menú"
             onClick={() => setOpen(false)}
           />
-          <ul className="absolute left-0 top-full z-50 mt-1 min-w-[200px] rounded-md border border-zinc-600 bg-zinc-900 py-1 shadow-lg">
+          <ul className="absolute left-0 top-full z-50 mt-1 min-w-[208px] rounded-lg border border-zinc-600/90 bg-zinc-950 py-1 shadow-xl ring-1 ring-black/40">
             {items.map(({ type, label }) => (
               <li key={type}>
                 <button
@@ -138,7 +145,7 @@ function ExportPngControl({ onToast }: { onToast: (msg: string) => void }) {
       await fitView({ padding: 0.15, duration: 200 })
       await new Promise((r) => setTimeout(r, 280))
       const dataUrl = await toPng(vp, {
-        backgroundColor: '#0e1016',
+        backgroundColor: '#0c0f14',
         pixelRatio: 2,
         cacheBust: true,
       })
@@ -156,7 +163,7 @@ function ExportPngControl({ onToast }: { onToast: (msg: string) => void }) {
     <button
       type="button"
       onClick={() => void exportPng()}
-      className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
+      className={toolBtn}
       aria-label="Exportar diagrama como PNG"
     >
       <Camera className="size-4 text-zinc-400" />
@@ -196,7 +203,7 @@ function ExportPdfControl({
     <button
       type="button"
       onClick={() => void run()}
-      className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
+      className={toolBtn}
       aria-label="Exportar informe PDF"
     >
       <FileDown className="size-4 text-zinc-400" />
@@ -312,13 +319,15 @@ function FlowToolbarInner({
 
   return (
     <>
-      <Panel position="top-left" className="m-3 flex max-w-[min(100%-1.5rem,640px)] flex-wrap gap-2">
+      <Panel position="top-left" className="m-3">
+        <div className="studio-chrome flex max-w-[min(100%-1.5rem,760px)] flex-wrap items-center gap-1.5 rounded-xl px-2 py-2">
         <AddNodeMenu onAdd={addNode} />
+        <ToolbarSep />
         <button
           type="button"
           disabled={!canUndo}
           onClick={() => (undo() ? onToast('Deshecho') : null)}
-          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className={toolBtn}
           aria-label="Deshacer"
         >
           <Undo2 className="size-4 text-zinc-400" />
@@ -328,52 +337,56 @@ function FlowToolbarInner({
           type="button"
           disabled={!canRedo}
           onClick={() => (redo() ? onToast('Rehecho') : null)}
-          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className={toolBtn}
           aria-label="Rehacer"
         >
           <Redo2 className="size-4 text-zinc-400" />
           Rehacer
         </button>
+        <ToolbarSep />
         <button
           type="button"
           onClick={applyLayout}
-          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
+          className={toolBtn}
         >
           <LayoutGrid className="size-4 text-zinc-400" />
           Organizar
         </button>
-        <button type="button" onClick={resetTemplate} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
+        <button type="button" onClick={resetTemplate} className={toolBtn}>
           <Sparkles className="size-4 text-zinc-400" />
           Plantilla
         </button>
-        <button type="button" onClick={expandPath} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
+        <button type="button" onClick={expandPath} className={toolBtn}>
           <Wand2 className="size-4 text-zinc-400" />
           Camino
         </button>
+        <ToolbarSep />
         <ExportPngControl onToast={onToast} />
         <ExportPdfControl onToast={onToast} validation={validation} />
-        <button type="button" onClick={exportJson} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
+        <button type="button" onClick={exportJson} className={toolBtn}>
           <Download className="size-4 text-zinc-400" />
           JSON
         </button>
-        <button type="button" onClick={importJson} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
+        <button type="button" onClick={importJson} className={toolBtn}>
           <Upload className="size-4 text-zinc-300" />
           Importar
         </button>
+        <ToolbarSep />
         <button
           type="button"
           onClick={onOpenShortcuts}
-          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
+          className={toolBtn}
           aria-label="Ver atajos de teclado"
         >
           <HelpCircle className="size-4 text-zinc-400" />
           Ayuda
         </button>
+        </div>
       </Panel>
 
       <Panel
         position="top-right"
-        className="m-3 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-right shadow-sm"
+        className="studio-chrome m-3 rounded-xl px-4 py-2.5 text-right"
       >
         {user && (
           <div className="flex items-center justify-end gap-2 text-xs text-zinc-400">
@@ -538,7 +551,7 @@ export function FlowWorkspace({
   }, [])
 
   return (
-    <div className="relative h-[calc(100vh-4.25rem)] w-full">
+    <div className="relative h-[calc(100vh-4.25rem)] w-full border-t border-zinc-800/35 bg-[var(--studio-canvas,#0c0f14)]">
       <ReactFlow
         className="studio-flow"
         nodes={nodes}
@@ -585,7 +598,7 @@ export function FlowWorkspace({
           <button
             type="button"
             onClick={() => setInsightsOpen((o) => !o)}
-            className="inline-flex w-fit items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
+            className={cn(toolBtn, 'w-fit')}
           >
             <BarChart3 className="size-4 text-zinc-400" />
             Calidad del modelo
@@ -601,7 +614,7 @@ export function FlowWorkspace({
             </span>
           </button>
           {insightsOpen && (
-            <div className="rounded-md border border-zinc-700 bg-zinc-900 p-3 text-xs shadow-sm">
+            <div className="studio-chrome rounded-xl p-3 text-xs">
               <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-zinc-400">
                 <li>Peligros: {validation.stats.hazards}</li>
                 <li>Prev.: {validation.stats.barriersPreventive}</li>
@@ -631,7 +644,7 @@ export function FlowWorkspace({
         </Panel>
 
         {primarySelected && (
-          <Panel position="bottom-right" className="m-3 w-[min(100%-1.5rem,280px)] rounded-md border border-zinc-700 bg-zinc-900 p-4 shadow-sm">
+          <Panel position="bottom-right" className="studio-chrome m-3 w-[min(100%-1.5rem,280px)] rounded-xl p-4">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Inspector</p>
             <p className="mt-1 text-xs text-zinc-300">
               {NODE_TYPE_LABELS[String(primarySelected.type)] ?? primarySelected.type}
