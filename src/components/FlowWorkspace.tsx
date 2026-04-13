@@ -87,7 +87,7 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 rounded-xl border border-violet-500/40 bg-violet-950/50 px-3 py-2 text-xs font-medium text-violet-100 shadow-lg backdrop-blur hover:bg-violet-900/50"
+        className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -103,12 +103,12 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
             aria-label="Cerrar menú"
             onClick={() => setOpen(false)}
           />
-          <ul className="absolute left-0 top-full z-50 mt-1 min-w-[200px] rounded-xl border border-zinc-700 bg-zinc-950 py-1 shadow-2xl">
+          <ul className="absolute left-0 top-full z-50 mt-1 min-w-[200px] rounded-md border border-zinc-600 bg-zinc-900 py-1 shadow-lg">
             {items.map(({ type, label }) => (
               <li key={type}>
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-left text-xs text-zinc-200 hover:bg-zinc-800"
+                  className="w-full px-3 py-2 text-left text-xs text-zinc-200 hover:bg-zinc-800/80"
                   onClick={() => {
                     onAdd(type)
                     setOpen(false)
@@ -138,7 +138,7 @@ function ExportPngControl({ onToast }: { onToast: (msg: string) => void }) {
       await fitView({ padding: 0.15, duration: 200 })
       await new Promise((r) => setTimeout(r, 280))
       const dataUrl = await toPng(vp, {
-        backgroundColor: '#09090b',
+        backgroundColor: '#0e1016',
         pixelRatio: 2,
         cacheBust: true,
       })
@@ -156,10 +156,10 @@ function ExportPngControl({ onToast }: { onToast: (msg: string) => void }) {
     <button
       type="button"
       onClick={() => void exportPng()}
-      className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800"
+      className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
       aria-label="Exportar diagrama como PNG"
     >
-      <Camera className="size-4 text-pink-400" />
+      <Camera className="size-4 text-zinc-400" />
       PNG
     </button>
   )
@@ -196,10 +196,10 @@ function ExportPdfControl({
     <button
       type="button"
       onClick={() => void run()}
-      className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-950/30 px-3 py-2 text-xs font-medium text-red-100 shadow-lg backdrop-blur hover:bg-red-950/50"
+      className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
       aria-label="Exportar informe PDF"
     >
-      <FileDown className="size-4 text-red-400" />
+      <FileDown className="size-4 text-zinc-400" />
       PDF
     </button>
   )
@@ -318,7 +318,7 @@ function FlowToolbarInner({
           type="button"
           disabled={!canUndo}
           onClick={() => (undo() ? onToast('Deshecho') : null)}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Deshacer"
         >
           <Undo2 className="size-4 text-zinc-400" />
@@ -328,7 +328,7 @@ function FlowToolbarInner({
           type="button"
           disabled={!canRedo}
           onClick={() => (redo() ? onToast('Rehecho') : null)}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Rehacer"
         >
           <Redo2 className="size-4 text-zinc-400" />
@@ -337,33 +337,33 @@ function FlowToolbarInner({
         <button
           type="button"
           onClick={applyLayout}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800"
+          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
         >
-          <LayoutGrid className="size-4 text-violet-400" />
+          <LayoutGrid className="size-4 text-zinc-400" />
           Organizar
         </button>
-        <button type="button" onClick={resetTemplate} className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800">
-          <Sparkles className="size-4 text-amber-400" />
+        <button type="button" onClick={resetTemplate} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
+          <Sparkles className="size-4 text-zinc-400" />
           Plantilla
         </button>
-        <button type="button" onClick={expandPath} className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800">
-          <Wand2 className="size-4 text-sky-400" />
+        <button type="button" onClick={expandPath} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
+          <Wand2 className="size-4 text-zinc-400" />
           Camino
         </button>
         <ExportPngControl onToast={onToast} />
         <ExportPdfControl onToast={onToast} validation={validation} />
-        <button type="button" onClick={exportJson} className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800">
-          <Download className="size-4 text-emerald-400" />
+        <button type="button" onClick={exportJson} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
+          <Download className="size-4 text-zinc-400" />
           JSON
         </button>
-        <button type="button" onClick={importJson} className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800">
+        <button type="button" onClick={importJson} className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800">
           <Upload className="size-4 text-zinc-300" />
           Importar
         </button>
         <button
           type="button"
           onClick={onOpenShortcuts}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800"
+          className="inline-flex items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
           aria-label="Ver atajos de teclado"
         >
           <HelpCircle className="size-4 text-zinc-400" />
@@ -373,7 +373,7 @@ function FlowToolbarInner({
 
       <Panel
         position="top-right"
-        className="m-3 rounded-2xl border border-zinc-700/80 bg-zinc-950/90 px-4 py-3 text-right shadow-xl backdrop-blur"
+        className="m-3 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-right shadow-sm"
       >
         {user && (
           <div className="flex items-center justify-end gap-2 text-xs text-zinc-400">
@@ -385,9 +385,9 @@ function FlowToolbarInner({
             </span>
           </div>
         )}
-        <p className="mt-2 flex items-center justify-end gap-1.5 text-[10px] text-zinc-600">
-          <AlertTriangle className="size-3 text-amber-500/80" />
-          Arrastra · Conecta · Doble clic para editar
+        <p className="mt-2 flex items-center justify-end gap-1.5 text-[10px] text-zinc-500">
+          <AlertTriangle className="size-3 text-zinc-500" />
+          Arrastre, conexión entre nodos y doble clic para editar texto
         </p>
       </Panel>
     </>
@@ -459,8 +459,8 @@ export function FlowWorkspace({
         addEdge(
           {
             ...p,
-            animated: true,
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#71717a', width: 18, height: 18 },
+            animated: false,
+            markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b', width: 14, height: 14 },
           },
           eds,
         ),
@@ -523,23 +523,24 @@ export function FlowWorkspace({
   const miniMapColor = useCallback((n: Node) => {
     switch (n.type) {
       case 'hazard':
-        return '#f43f5e'
+        return '#9a5b5b'
       case 'barrierPreventive':
-        return '#f59e0b'
+        return '#7d6b52'
       case 'topEvent':
-        return '#8b5cf6'
+        return '#5c6470'
       case 'barrierMitigative':
-        return '#0ea5e9'
+        return '#4f6674'
       case 'consequence':
-        return '#34d399'
+        return '#4d6b5c'
       default:
-        return '#71717a'
+        return '#52525b'
     }
   }, [])
 
   return (
     <div className="relative h-[calc(100vh-4.25rem)] w-full">
       <ReactFlow
+        className="studio-flow"
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChangeWrapped}
@@ -554,14 +555,15 @@ export function FlowWorkspace({
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
-          style: { strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#71717a', width: 18, height: 18 },
+          animated: false,
+          style: { stroke: '#64748b', strokeWidth: 1.25 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b', width: 14, height: 14 },
         }}
         deleteKeyCode={['Backspace', 'Delete']}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-40" />
+        <Background variant={BackgroundVariant.Lines} gap={32} lineWidth={0.5} color="#475569" className="opacity-[0.06]" />
         <Controls showInteractive={false} />
-        <MiniMap pannable zoomable nodeColor={miniMapColor} maskColor="rgb(9 9 11 / 0.75)" />
+        <MiniMap pannable zoomable nodeColor={miniMapColor} maskColor="rgb(14 16 22 / 0.82)" className="!rounded-md !border !border-zinc-700 !bg-zinc-900/95" />
 
         <FlowToolbarInner
           user={user}
@@ -583,9 +585,9 @@ export function FlowWorkspace({
           <button
             type="button"
             onClick={() => setInsightsOpen((o) => !o)}
-            className="inline-flex w-fit items-center gap-2 rounded-xl border border-zinc-600/80 bg-zinc-900/95 px-3 py-2 text-xs font-medium text-zinc-100 shadow-lg backdrop-blur hover:bg-zinc-800"
+            className="inline-flex w-fit items-center gap-2 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm hover:border-zinc-500 hover:bg-zinc-800"
           >
-            <BarChart3 className="size-4 text-emerald-400" />
+            <BarChart3 className="size-4 text-zinc-400" />
             Calidad del modelo
             <span
               className={cn(
@@ -599,7 +601,7 @@ export function FlowWorkspace({
             </span>
           </button>
           {insightsOpen && (
-            <div className="rounded-2xl border border-zinc-700/80 bg-zinc-950/95 p-3 text-xs shadow-xl backdrop-blur">
+            <div className="rounded-md border border-zinc-700 bg-zinc-900 p-3 text-xs shadow-sm">
               <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-zinc-400">
                 <li>Peligros: {validation.stats.hazards}</li>
                 <li>Prev.: {validation.stats.barriersPreventive}</li>
@@ -629,9 +631,9 @@ export function FlowWorkspace({
         </Panel>
 
         {primarySelected && (
-          <Panel position="bottom-right" className="m-3 w-[min(100%-1.5rem,280px)] rounded-2xl border border-zinc-700/80 bg-zinc-950/95 p-4 shadow-xl backdrop-blur">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Inspector</p>
-            <p className="mt-1 text-xs text-violet-300/90">
+          <Panel position="bottom-right" className="m-3 w-[min(100%-1.5rem,280px)] rounded-md border border-zinc-700 bg-zinc-900 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Inspector</p>
+            <p className="mt-1 text-xs text-zinc-300">
               {NODE_TYPE_LABELS[String(primarySelected.type)] ?? primarySelected.type}
             </p>
             <label className="mt-3 block text-[10px] uppercase tracking-wide text-zinc-500" htmlFor="insp-label">
@@ -642,12 +644,12 @@ export function FlowWorkspace({
               value={String(primarySelected.data?.label ?? '')}
               onChange={(e) => updateSelectedLabel(e.target.value)}
               rows={3}
-              className="nodrag nopan mt-1 w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-violet-500"
+              className="nodrag nopan mt-1 w-full resize-none rounded-md border border-zinc-600 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/30"
             />
             <button
               type="button"
               onClick={deleteSelected}
-              className="nodrag nopan mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/40 bg-rose-950/40 py-2 text-xs font-medium text-rose-200 hover:bg-rose-950/70"
+              className="nodrag nopan mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-zinc-600 bg-zinc-950 py-2 text-xs font-medium text-zinc-300 hover:border-rose-900/60 hover:bg-rose-950/25"
             >
               <Trash2 className="size-3.5" />
               Eliminar selección

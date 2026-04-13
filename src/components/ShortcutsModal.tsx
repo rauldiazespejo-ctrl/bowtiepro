@@ -24,7 +24,7 @@ export function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () =
     >
       <div
         className={cn(
-          'max-h-[85vh] w-full max-w-md overflow-auto rounded-2xl border border-zinc-700 bg-zinc-950 p-6 shadow-2xl',
+          'max-h-[85vh] w-full max-w-md overflow-auto rounded-md border border-zinc-700 bg-zinc-900 p-6 shadow-lg',
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -48,7 +48,7 @@ export function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () =
               className="flex items-center justify-between gap-4 border-b border-zinc-800/80 py-2 last:border-0"
             >
               <span className="text-zinc-300">{action}</span>
-              <kbd className="shrink-0 rounded-md border border-zinc-600 bg-zinc-900 px-2 py-0.5 font-mono text-[11px] text-violet-200">
+              <kbd className="shrink-0 rounded border border-zinc-600 bg-zinc-950 px-2 py-0.5 font-mono text-[11px] text-zinc-400">
                 {keys}
               </kbd>
             </li>

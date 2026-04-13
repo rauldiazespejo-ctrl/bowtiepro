@@ -8,7 +8,7 @@ export async function exportBowtiePdf(
   validation: DiagramValidation,
 ): Promise<void> {
   const dataUrl = await toPng(viewportEl, {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0e1016',
     pixelRatio: 2,
     cacheBust: true,
   })
@@ -23,7 +23,7 @@ export async function exportBowtiePdf(
 
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(18)
-  pdf.setTextColor(196, 181, 253)
+  pdf.setTextColor(200, 204, 212)
   pdf.text('Bowtie Studio', m, m + 6)
 
   pdf.setFont('helvetica', 'normal')

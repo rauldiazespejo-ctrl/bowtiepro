@@ -40,27 +40,27 @@ export function App() {
   }, [showToast])
 
   return (
-    <div className="flex min-h-full flex-col bg-zinc-950 text-zinc-100">
+    <div className="flex min-h-full flex-col bg-[#0b0d11] text-zinc-100">
       <header
         className={cn(
-          'flex shrink-0 items-center justify-between border-b border-zinc-800/80 px-5 py-3',
-          'bg-gradient-to-r from-zinc-950 via-violet-950/20 to-zinc-950',
+          'flex shrink-0 items-center justify-between border-b border-zinc-800/90 px-5 py-3',
+          'bg-[#0f1117]',
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 shadow-lg shadow-violet-950/50">
-            <span className="text-lg font-bold tracking-tight text-white">B</span>
+          <div className="flex size-9 items-center justify-center rounded-md border border-zinc-600 bg-zinc-900">
+            <span className="text-sm font-semibold tracking-tight text-zinc-200">B</span>
           </div>
           <div>
-            <h1 className="text-base font-semibold tracking-tight text-white">Bowtie Studio</h1>
+            <h1 className="text-[15px] font-semibold tracking-tight text-zinc-100">Bowtie Studio</h1>
             <p className="text-xs text-zinc-500">
-              Análisis de barreras, bowtie visual y reporting listo para HSE / procesos críticos
+              Modelado de barreras y bowtie para estudios HSE y procesos críticos
             </p>
           </div>
         </div>
         <div className="hidden text-right sm:block">
-          <p className="text-[10px] font-medium uppercase tracking-widest text-violet-400/90">Pro</p>
-          <p className="text-xs text-zinc-500">Validación · Historial · Exportación</p>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Pro</p>
+          <p className="text-xs text-zinc-600">Validación · Historial · Exportación</p>
         </div>
       </header>
 
@@ -84,7 +84,7 @@ export function App() {
         )}
       >
         {toast && (
-          <div className="pointer-events-auto rounded-full border border-zinc-600 bg-zinc-900/95 px-5 py-2.5 text-sm text-zinc-100 shadow-2xl backdrop-blur">
+          <div className="pointer-events-auto rounded-md border border-zinc-700 bg-zinc-900 px-5 py-2.5 text-sm text-zinc-200 shadow-lg">
             {toast}
           </div>
         )}

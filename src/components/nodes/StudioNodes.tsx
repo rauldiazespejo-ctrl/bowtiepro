@@ -34,7 +34,7 @@ function EditableLabel({ id, label }: { id: string; label: string }) {
           }
         }}
         rows={2}
-        className="nodrag nopan mt-1 w-full resize-none rounded-lg border border-zinc-600/80 bg-black/40 px-2 py-1 text-sm font-medium leading-snug text-zinc-50 outline-none focus:border-violet-500"
+        className="nodrag nopan mt-1 w-full resize-none rounded-md border border-zinc-600 bg-zinc-950 px-2 py-1 text-sm font-medium leading-snug text-zinc-100 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/40"
       />
     )
   }
@@ -46,7 +46,7 @@ function EditableLabel({ id, label }: { id: string; label: string }) {
         e.stopPropagation()
         setEditing(true)
       }}
-      className="nodrag nopan mt-1.5 w-full rounded-lg text-left text-sm font-medium leading-snug text-zinc-50 hover:bg-white/5"
+      className="nodrag nopan mt-1.5 w-full rounded-md text-left text-sm font-medium leading-snug text-zinc-200 hover:bg-zinc-800/60"
     >
       {label}
     </button>
@@ -71,7 +71,7 @@ function NodeShell({
   return (
     <div
       className={cn(
-        'rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-md min-w-[160px] max-w-[220px] transition-[transform,box-shadow] duration-200 hover:scale-[1.02] hover:shadow-2xl',
+        'bowtie-node min-w-[168px] max-w-[240px] rounded-lg border border-zinc-700/90 bg-zinc-950/95 px-3.5 py-2.5 shadow-sm ring-1 ring-black/20',
         className,
       )}
     >
@@ -79,17 +79,17 @@ function NodeShell({
         <Handle
           type="target"
           position={Position.Left}
-          className="!size-2.5 !border-2 !border-zinc-600 !bg-zinc-300"
+          className="!size-2 !border !border-zinc-500 !bg-zinc-600"
         />
       )}
       {source && (
         <Handle
           type="source"
           position={Position.Right}
-          className="!size-2.5 !border-2 !border-zinc-600 !bg-zinc-300"
+          className="!size-2 !border !border-zinc-500 !bg-zinc-600"
         />
       )}
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/55">{badge}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{badge}</p>
       <EditableLabel id={id} label={label} />
     </div>
   )
@@ -102,7 +102,7 @@ export function HazardNode({ id, data }: NodeProps<{ label: string }>) {
       label={data.label}
       badge="Peligro"
       source
-      className="border-rose-500/35 bg-gradient-to-br from-rose-950/90 to-zinc-950/90 ring-1 ring-rose-500/20"
+      className="border-l-[3px] border-l-rose-700/90 border-t-zinc-700/90 border-r-zinc-700/90 border-b-zinc-700/90"
     />
   )
 }
@@ -115,7 +115,7 @@ export function BarrierPreventiveNode({ id, data }: NodeProps<{ label: string }>
       badge="Barrera preventiva"
       target
       source
-      className="border-amber-500/35 bg-gradient-to-br from-amber-950/85 to-zinc-950/90 ring-1 ring-amber-400/15"
+      className="border-l-[3px] border-l-amber-700/85 border-t-zinc-700/90 border-r-zinc-700/90 border-b-zinc-700/90"
     />
   )
 }
@@ -128,7 +128,7 @@ export function TopEventNode({ id, data }: NodeProps<{ label: string }>) {
       badge="Evento superior"
       target
       source
-      className="border-violet-500/40 bg-gradient-to-br from-violet-950/90 to-zinc-950/90 ring-2 ring-violet-500/25 shadow-violet-950/40"
+      className="border-l-[3px] border-l-slate-400/90 border-t-zinc-600 border-r-zinc-600 border-b-zinc-600 bg-zinc-900/95"
     />
   )
 }
@@ -141,7 +141,7 @@ export function BarrierMitigativeNode({ id, data }: NodeProps<{ label: string }>
       badge="Barrera mitigadora"
       target
       source
-      className="border-sky-500/35 bg-gradient-to-br from-sky-950/85 to-zinc-950/90 ring-1 ring-sky-400/15"
+      className="border-l-[3px] border-l-sky-800/90 border-t-zinc-700/90 border-r-zinc-700/90 border-b-zinc-700/90"
     />
   )
 }
@@ -153,7 +153,7 @@ export function ConsequenceNode({ id, data }: NodeProps<{ label: string }>) {
       label={data.label}
       badge="Consecuencia"
       target
-      className="border-emerald-500/30 bg-gradient-to-br from-emerald-950/80 to-zinc-950/90 ring-1 ring-emerald-500/15"
+      className="border-l-[3px] border-l-emerald-800/90 border-t-zinc-700/90 border-r-zinc-700/90 border-b-zinc-700/90"
     />
   )
 }
