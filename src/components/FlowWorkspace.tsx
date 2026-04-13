@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -226,6 +226,7 @@ function FlowToolbarInner({
   canRedo,
   onOpenShortcuts,
   validation,
+  readOnly = false,
 }: {
   user: SessionUser | null
   onToast: (msg: string) => void
@@ -240,6 +241,7 @@ function FlowToolbarInner({
   canRedo: boolean
   onOpenShortcuts: () => void
   validation: DiagramValidation
+  readOnly?: boolean
 }) {
   const { screenToFlowPosition } = useReactFlow()
 
@@ -316,6 +318,30 @@ function FlowToolbarInner({
     },
     [setNodes, onToast, takeSnapshot, screenToFlowPosition],
   )
+
+  if (readOnly) {
+    return (
+      <>
+        <Panel position="top-left" className="m-3">
+          <div className="studio-chrome flex flex-wrap items-center gap-1.5 rounded-xl px-2 py-2">
+            <span className="px-2 text-xs font-medium text-amber-200/90">Vista demo · solo lectura</span>
+            <ToolbarSep />
+            <ExportPngControl onToast={onToast} />
+            <ExportPdfControl onToast={onToast} validation={validation} />
+            <button
+              type="button"
+              onClick={onOpenShortcuts}
+              className={toolBtn}
+              aria-label="Ver atajos de teclado"
+            >
+              <HelpCircle className="size-4 text-zinc-400" />
+              Ayuda
+            </button>
+          </div>
+        </Panel>
+      </>
+    )
+  }
 
   return (
     <>
@@ -414,6 +440,9 @@ export function FlowWorkspace({
   setSavedAt,
   shortcutsOpen,
   setShortcutsOpen,
+  remoteDiagramId = null,
+  demoToken = null,
+  readOnly = false,
 }: {
   user: SessionUser | null
   onToast: (msg: string) => void
@@ -421,52 +450,191 @@ export function FlowWorkspace({
   setSavedAt: (d: Date | null) => void
   shortcutsOpen: boolean
   setShortcutsOpen: (v: boolean) => void
+  /** Guardar en servidor (por usuario). */
+  remoteDiagramId?: string | null
+  /** Cargar snapshot demo público. */
+  demoToken?: string | null
+  readOnly?: boolean
 }) {
-  const initial = useMemo(() => {
-    const stored = loadDiagram()
-    if (stored?.nodes?.length) {
-      return {
-        nodes: layoutBowtie(stored.nodes as Node[]),
-        edges: stored.edges as Edge[],
-      }
-    }
-    const t = createDefaultTemplate()
-    return { nodes: layoutBowtie(t.nodes), edges: t.edges }
-  }, [])
-
-  const [nodes, setNodes, onNodesChange] = useNodesState(initial.nodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges)
+  const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[])
+  const [canvasReady, setCanvasReady] = useState(false)
+  const versionRef = useRef(1)
   const [insightsOpen, setInsightsOpen] = useState(true)
   const [selected, setSelected] = useState<OnSelectionChangeParams>({ nodes: [], edges: [] })
 
   const { takeSnapshot, undo, redo, canUndo, canRedo } = useDiagramHistory(nodes, edges, setNodes, setEdges)
 
   useEffect(() => {
+    let cancelled = false
+    async function load() {
+      if (demoToken) {
+        const res = await fetch(`/api/public/demo/${encodeURIComponent(demoToken)}`)
+        if (!res.ok) {
+          onToast(res.status === 410 ? 'El enlace demo ha caducado' : 'No se pudo cargar la demo')
+          const t = createDefaultTemplate()
+          if (!cancelled) {
+            setNodes(layoutBowtie(t.nodes))
+            setEdges(t.edges)
+            setCanvasReady(true)
+          }
+          return
+        }
+        const data = (await res.json()) as { nodes: Node[]; edges: Edge[] }
+        if (!cancelled) {
+          setNodes(layoutBowtie(data.nodes))
+          setEdges(data.edges)
+          setCanvasReady(true)
+        }
+        return
+      }
+      if (remoteDiagramId) {
+        const res = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
+          credentials: 'include',
+        })
+        if (!res.ok) {
+          onToast('No se pudo cargar el diagrama del servidor')
+          const tpl = createDefaultTemplate()
+          if (!cancelled) {
+            setNodes(layoutBowtie(tpl.nodes))
+            setEdges(tpl.edges)
+            versionRef.current = 1
+            setCanvasReady(true)
+          }
+          return
+        }
+        const data = (await res.json()) as { nodes: Node[]; edges: Edge[]; version: number }
+        if (!cancelled) {
+          versionRef.current = data.version
+          setNodes(layoutBowtie(data.nodes))
+          setEdges(data.edges)
+          setCanvasReady(true)
+        }
+        return
+      }
+      const stored = loadDiagram()
+      if (stored?.nodes?.length) {
+        if (!cancelled) {
+          setNodes(layoutBowtie(stored.nodes as Node[]))
+          setEdges(stored.edges as Edge[])
+          setCanvasReady(true)
+        }
+        return
+      }
+      const t = createDefaultTemplate()
+      if (!cancelled) {
+        setNodes(layoutBowtie(t.nodes))
+        setEdges(t.edges)
+        setCanvasReady(true)
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [demoToken, remoteDiagramId, onToast, setEdges, setNodes])
+
+  useEffect(() => {
+    if (!canvasReady) return
+    if (demoToken || readOnly) return
+    if (!remoteDiagramId) {
+      const t = setTimeout(() => {
+        saveDiagram(nodes, edges)
+        setSavedAt(new Date())
+      }, 900)
+      return () => clearTimeout(t)
+    }
     const t = setTimeout(() => {
-      saveDiagram(nodes, edges)
-      setSavedAt(new Date())
-    }, 900)
+      void (async () => {
+        try {
+          const res = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nodes,
+              edges,
+              version: versionRef.current,
+            }),
+          })
+          if (res.status === 409) {
+            const r2 = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
+              credentials: 'include',
+            })
+            if (r2.ok) {
+              const j = (await r2.json()) as { nodes: Node[]; edges: Edge[]; version: number }
+              versionRef.current = j.version
+              setNodes(layoutBowtie(j.nodes))
+              setEdges(j.edges)
+              onToast('Otro colaborador editó el diagrama; se sincronizó')
+            }
+            return
+          }
+          if (!res.ok) return
+          const j = (await res.json()) as { version: number }
+          versionRef.current = j.version
+          setSavedAt(new Date())
+        } catch {
+          /* ignore */
+        }
+      })()
+    }, 1200)
     return () => clearTimeout(t)
-  }, [nodes, edges, setSavedAt])
+  }, [nodes, edges, remoteDiagramId, demoToken, readOnly, canvasReady, setSavedAt, onToast, setEdges, setNodes])
+
+  useEffect(() => {
+    if (!canvasReady || !remoteDiagramId || demoToken || readOnly) return
+    const id = window.setInterval(() => {
+      void (async () => {
+        try {
+          const res = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
+            credentials: 'include',
+          })
+          if (!res.ok) return
+          const j = (await res.json()) as { version: number; nodes: Node[]; edges: Edge[] }
+          if (j.version > versionRef.current) {
+            versionRef.current = j.version
+            setNodes(layoutBowtie(j.nodes))
+            setEdges(j.edges)
+            onToast('Cambios de un colaborador aplicados')
+          }
+        } catch {
+          /* ignore */
+        }
+      })()
+    }, 12000)
+    return () => window.clearInterval(id)
+  }, [canvasReady, remoteDiagramId, demoToken, readOnly, onToast, setEdges, setNodes])
 
   const onNodesChangeWrapped = useCallback(
     (changes: NodeChange[]) => {
+      if (readOnly) {
+        const allowed = changes.filter((ch) => ch.type === 'select')
+        if (allowed.length) onNodesChange(allowed)
+        return
+      }
       if (changes.some((c) => c.type === 'remove')) takeSnapshot()
       onNodesChange(changes)
     },
-    [onNodesChange, takeSnapshot],
+    [onNodesChange, takeSnapshot, readOnly],
   )
 
   const onEdgesChangeWrapped = useCallback(
     (changes: EdgeChange[]) => {
+      if (readOnly) {
+        const allowed = changes.filter((ch) => ch.type === 'select')
+        if (allowed.length) onEdgesChange(allowed)
+        return
+      }
       if (changes.some((c) => c.type === 'remove')) takeSnapshot()
       onEdgesChange(changes)
     },
-    [onEdgesChange, takeSnapshot],
+    [onEdgesChange, takeSnapshot, readOnly],
   )
 
   const onConnect = useCallback(
     (p: Connection) => {
+      if (readOnly) return
       takeSnapshot()
       setEdges((eds) =>
         addEdge(
@@ -479,12 +647,13 @@ export function FlowWorkspace({
         ),
       )
     },
-    [setEdges, takeSnapshot],
+    [setEdges, takeSnapshot, readOnly],
   )
 
   const onNodeDragStart = useCallback(() => {
+    if (readOnly) return
     takeSnapshot()
-  }, [takeSnapshot])
+  }, [takeSnapshot, readOnly])
 
   const validation = useMemo(() => validateDiagram(nodes, edges), [nodes, edges])
   const primarySelected = selected.nodes[0]
@@ -500,6 +669,7 @@ export function FlowWorkspace({
   )
 
   const deleteSelected = useCallback(() => {
+    if (readOnly) return
     if (selected.nodes.length === 0 && selected.edges.length === 0) return
     takeSnapshot()
     const nodeIds = new Set(selected.nodes.map((n) => n.id))
@@ -507,7 +677,7 @@ export function FlowWorkspace({
     setNodes((ns) => ns.filter((n) => !nodeIds.has(n.id)))
     setEdges((es) => es.filter((e) => !edgeIds.has(e.id) && !nodeIds.has(e.source) && !nodeIds.has(e.target)))
     onToast('Selección eliminada')
-  }, [selected, setNodes, setEdges, onToast, takeSnapshot])
+  }, [selected, setNodes, setEdges, onToast, takeSnapshot, readOnly])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -550,6 +720,14 @@ export function FlowWorkspace({
     }
   }, [])
 
+  if (!canvasReady) {
+    return (
+      <div className="flex h-[calc(100vh-4.25rem)] w-full items-center justify-center border-t border-zinc-800/35 bg-[var(--studio-canvas,#0c0f14)] text-sm text-zinc-500">
+        Cargando diagrama…
+      </div>
+    )
+  }
+
   return (
     <div className="relative h-[calc(100vh-4.25rem)] w-full border-t border-zinc-800/35 bg-[var(--studio-canvas,#0c0f14)]">
       <ReactFlow
@@ -558,10 +736,13 @@ export function FlowWorkspace({
         edges={edges}
         onNodesChange={onNodesChangeWrapped}
         onEdgesChange={onEdgesChangeWrapped}
-        onConnect={onConnect}
+        onConnect={readOnly ? undefined : onConnect}
         onNodeDragStart={onNodeDragStart}
         onSelectionChange={setSelected}
         nodeTypes={nodeTypes}
+        nodesDraggable={!readOnly}
+        nodesConnectable={!readOnly}
+        elementsSelectable
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.35}
@@ -572,7 +753,7 @@ export function FlowWorkspace({
           style: { stroke: '#64748b', strokeWidth: 1.25 },
           markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b', width: 14, height: 14 },
         }}
-        deleteKeyCode={['Backspace', 'Delete']}
+        deleteKeyCode={readOnly ? null : ['Backspace', 'Delete']}
       >
         <Background variant={BackgroundVariant.Lines} gap={32} lineWidth={0.5} color="#475569" className="opacity-[0.06]" />
         <Controls showInteractive={false} />
@@ -592,6 +773,7 @@ export function FlowWorkspace({
           canRedo={canRedo}
           onOpenShortcuts={() => setShortcutsOpen(true)}
           validation={validation}
+          readOnly={readOnly}
         />
 
         <Panel position="bottom-left" className="m-3 flex max-w-[min(100%-1.5rem,320px)] flex-col gap-2">
@@ -643,7 +825,7 @@ export function FlowWorkspace({
           )}
         </Panel>
 
-        {primarySelected && (
+        {primarySelected && !readOnly && (
           <Panel position="bottom-right" className="studio-chrome m-3 w-[min(100%-1.5rem,280px)] rounded-xl p-4">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Inspector</p>
             <p className="mt-1 text-xs text-zinc-300">

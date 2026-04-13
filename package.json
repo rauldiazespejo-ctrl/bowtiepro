@@ -16,7 +16,9 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",
+    "@libsql/client": "^0.17.2",
     "@xyflow/react": "^12.10.2",
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "hono": "^4.12.12",
     "html-to-image": "^1.11.13",
@@ -31,6 +33,7 @@
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.18.2",
     "@tailwindcss/vite": "^4.2.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",

@@ -1,12 +1,16 @@
 import { Hono } from 'hono'
 import auth from './api/auth'
 import users from './api/users'
+import diagrams from './api/diagrams'
+import publicApi from './api/public'
 
 const app = new Hono()
 
 // Mount API routes
 app.route('/api/auth', auth)
 app.route('/api/users', users)
+app.route('/api/diagrams', diagrams)
+app.route('/api/public', publicApi)
 
 // Fallback to React app
 app.get('*', (c) => {
