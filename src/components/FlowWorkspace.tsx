@@ -70,10 +70,10 @@ const NODE_TYPE_LABELS: Record<string, string> = {
 }
 
 const toolBtn =
-  'inline-flex items-center gap-1.5 rounded-md border border-zinc-600/75 bg-zinc-900/65 px-2.5 py-1.5 text-xs font-medium text-zinc-200 shadow-sm transition-colors hover:border-zinc-500 hover:bg-zinc-800/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/35 disabled:cursor-not-allowed disabled:opacity-40'
+  'inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/35 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-700'
 
 function ToolbarSep() {
-  return <span className="hidden h-6 w-px shrink-0 bg-zinc-600/45 sm:block" aria-hidden />
+  return <span className="hidden h-6 w-px shrink-0 bg-slate-200 dark:bg-slate-700 sm:block" aria-hidden />
 }
 
 type SessionUser = { name: string; role: string }
@@ -94,7 +94,7 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={toolBtn}
+        className={cn(toolBtn, 'pro-button-primary border-sky-500 bg-sky-500 text-white hover:bg-sky-600')}
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -110,12 +110,12 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
             aria-label="Cerrar menú"
             onClick={() => setOpen(false)}
           />
-          <ul className="absolute left-0 top-full z-50 mt-1 min-w-[208px] rounded-lg border border-zinc-600/90 bg-zinc-950 py-1 shadow-xl ring-1 ring-black/40">
+          <ul className="absolute left-0 top-full z-50 mt-2 min-w-[200px] rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl ring-1 ring-slate-200/50 dark:border-slate-700 dark:bg-slate-900">
             {items.map(({ type, label }) => (
               <li key={type}>
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-left text-xs text-zinc-200 hover:bg-zinc-800/80"
+                  className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   onClick={() => {
                     onAdd(type)
                     setOpen(false)
@@ -166,7 +166,7 @@ function ExportPngControl({ onToast }: { onToast: (msg: string) => void }) {
       className={toolBtn}
       aria-label="Exportar diagrama como PNG"
     >
-      <Camera className="size-4 text-zinc-400" />
+      <Camera className="size-4 text-slate-500 dark:text-slate-400" />
       PNG
     </button>
   )
@@ -206,7 +206,7 @@ function ExportPdfControl({
       className={toolBtn}
       aria-label="Exportar informe PDF"
     >
-      <FileDown className="size-4 text-zinc-400" />
+      <FileDown className="size-4 text-slate-500 dark:text-slate-400" />
       PDF
     </button>
   )
@@ -323,8 +323,8 @@ function FlowToolbarInner({
     return (
       <>
         <Panel position="top-left" className="m-3">
-          <div className="studio-chrome flex flex-wrap items-center gap-1.5 rounded-xl px-2 py-2">
-            <span className="px-2 text-xs font-medium text-amber-200/90">Vista demo · solo lectura</span>
+          <div className="toolbar-pro">
+            <span className="px-3 text-xs font-bold text-amber-600 dark:text-amber-400">Vista demo · solo lectura</span>
             <ToolbarSep />
             <ExportPngControl onToast={onToast} />
             <ExportPdfControl onToast={onToast} validation={validation} />
@@ -334,7 +334,7 @@ function FlowToolbarInner({
               className={toolBtn}
               aria-label="Ver atajos de teclado"
             >
-              <HelpCircle className="size-4 text-zinc-400" />
+              <HelpCircle className="size-4 text-slate-500 dark:text-slate-400" />
               Ayuda
             </button>
           </div>
@@ -346,7 +346,7 @@ function FlowToolbarInner({
   return (
     <>
       <Panel position="top-left" className="m-3">
-        <div className="studio-chrome flex max-w-[min(100%-1.5rem,760px)] flex-wrap items-center gap-1.5 rounded-xl px-2 py-2">
+        <div className="toolbar-pro">
         <AddNodeMenu onAdd={addNode} />
         <ToolbarSep />
         <button
@@ -356,7 +356,7 @@ function FlowToolbarInner({
           className={toolBtn}
           aria-label="Deshacer"
         >
-          <Undo2 className="size-4 text-zinc-400" />
+          <Undo2 className="size-4 text-slate-500 dark:text-slate-400" />
           Deshacer
         </button>
         <button
@@ -366,7 +366,7 @@ function FlowToolbarInner({
           className={toolBtn}
           aria-label="Rehacer"
         >
-          <Redo2 className="size-4 text-zinc-400" />
+          <Redo2 className="size-4 text-slate-500 dark:text-slate-400" />
           Rehacer
         </button>
         <ToolbarSep />
@@ -375,26 +375,26 @@ function FlowToolbarInner({
           onClick={applyLayout}
           className={toolBtn}
         >
-          <LayoutGrid className="size-4 text-zinc-400" />
+          <LayoutGrid className="size-4 text-slate-500 dark:text-slate-400" />
           Organizar
         </button>
         <button type="button" onClick={resetTemplate} className={toolBtn}>
-          <Sparkles className="size-4 text-zinc-400" />
+          <Sparkles className="size-4 text-slate-500 dark:text-slate-400" />
           Plantilla
         </button>
         <button type="button" onClick={expandPath} className={toolBtn}>
-          <Wand2 className="size-4 text-zinc-400" />
+          <Wand2 className="size-4 text-slate-500 dark:text-slate-400" />
           Camino
         </button>
         <ToolbarSep />
         <ExportPngControl onToast={onToast} />
         <ExportPdfControl onToast={onToast} validation={validation} />
         <button type="button" onClick={exportJson} className={toolBtn}>
-          <Download className="size-4 text-zinc-400" />
+          <Download className="size-4 text-slate-500 dark:text-slate-400" />
           JSON
         </button>
         <button type="button" onClick={importJson} className={toolBtn}>
-          <Upload className="size-4 text-zinc-300" />
+          <Upload className="size-4 text-slate-400 dark:text-slate-300" />
           Importar
         </button>
         <ToolbarSep />
@@ -404,7 +404,7 @@ function FlowToolbarInner({
           className={toolBtn}
           aria-label="Ver atajos de teclado"
         >
-          <HelpCircle className="size-4 text-zinc-400" />
+          <HelpCircle className="size-4 text-slate-500 dark:text-slate-400" />
           Ayuda
         </button>
         </div>
@@ -412,21 +412,21 @@ function FlowToolbarInner({
 
       <Panel
         position="top-right"
-        className="studio-chrome m-3 rounded-xl px-4 py-2.5 text-right"
+        className="pro-panel m-3 px-5 py-3"
       >
         {user && (
-          <div className="flex items-center justify-end gap-2 text-xs text-zinc-400">
-            <User className="size-3.5" />
+          <div className="flex items-center justify-end gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+            <User className="size-4" />
             <span>
               {user.name}
-              <span className="text-zinc-600"> · </span>
-              {user.role}
+              <span className="text-slate-400"> · </span>
+              <span className="text-xs uppercase">{user.role}</span>
             </span>
           </div>
         )}
-        <p className="mt-2 flex items-center justify-end gap-1.5 text-[10px] text-zinc-500">
-          <AlertTriangle className="size-3 text-zinc-500" />
-          Arrastre, conexión entre nodos y doble clic para editar texto
+        <p className="mt-2 flex items-center justify-end gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+          <AlertTriangle className="size-3.5 text-amber-500" />
+          Arrastre, conexión entre nodos y doble clic para editar
         </p>
       </Panel>
     </>
@@ -706,30 +706,30 @@ export function FlowWorkspace({
   const miniMapColor = useCallback((n: Node) => {
     switch (n.type) {
       case 'hazard':
-        return '#9a5b5b'
+        return '#e11d48'
       case 'barrierPreventive':
-        return '#7d6b52'
+        return '#d97706'
       case 'topEvent':
-        return '#5c6470'
+        return '#475569'
       case 'barrierMitigative':
-        return '#4f6674'
+        return '#0369a1'
       case 'consequence':
-        return '#4d6b5c'
+        return '#059669'
       default:
-        return '#52525b'
+        return '#64748b'
     }
   }, [])
 
   if (!canvasReady) {
     return (
-      <div className="flex h-[calc(100vh-4.25rem)] w-full items-center justify-center border-t border-zinc-800/35 bg-[var(--studio-canvas,#0c0f14)] text-sm text-zinc-500">
+      <div className="flex h-[calc(100vh-4.25rem)] w-full items-center justify-center border-t border-slate-200 bg-[var(--studio-canvas)] text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
         Cargando diagrama…
       </div>
     )
   }
 
   return (
-    <div className="relative h-[calc(100vh-4.25rem)] w-full border-t border-zinc-800/35 bg-[var(--studio-canvas,#0c0f14)]">
+    <div className="relative h-[calc(100vh-4.25rem)] w-full border-t border-slate-200 bg-[var(--studio-canvas)] dark:border-slate-700">
       <ReactFlow
         className="studio-flow"
         nodes={nodes}
@@ -750,14 +750,14 @@ export function FlowWorkspace({
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
           animated: false,
-          style: { stroke: '#64748b', strokeWidth: 1.25 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b', width: 14, height: 14 },
+          style: { stroke: '#94a3b8', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', width: 14, height: 14 },
         }}
         deleteKeyCode={readOnly ? null : ['Backspace', 'Delete']}
       >
-        <Background variant={BackgroundVariant.Lines} gap={32} lineWidth={0.5} color="#475569" className="opacity-[0.06]" />
+        <Background variant={BackgroundVariant.Lines} gap={32} lineWidth={0.5} color="#cbd5e1" className="opacity-40 dark:opacity-30" />
         <Controls showInteractive={false} />
-        <MiniMap pannable zoomable nodeColor={miniMapColor} maskColor="rgb(14 16 22 / 0.82)" className="!rounded-md !border !border-zinc-700 !bg-zinc-900/95" />
+        <MiniMap pannable zoomable nodeColor={miniMapColor} maskColor="rgb(248 250 252 / 0.85)" className="!rounded-xl !border !border-slate-200 !bg-white/90 dark:!border-slate-700 dark:!bg-slate-900/90" />
 
         <FlowToolbarInner
           user={user}
@@ -782,40 +782,40 @@ export function FlowWorkspace({
             onClick={() => setInsightsOpen((o) => !o)}
             className={cn(toolBtn, 'w-fit')}
           >
-            <BarChart3 className="size-4 text-zinc-400" />
+            <BarChart3 className="size-4 text-slate-500 dark:text-slate-400" />
             Calidad del modelo
             <span
               className={cn(
-                'ml-1 rounded-md px-1.5 py-0.5 font-mono text-[10px]',
-                validation.healthScore >= 80 && 'bg-emerald-500/20 text-emerald-300',
-                validation.healthScore >= 50 && validation.healthScore < 80 && 'bg-amber-500/20 text-amber-200',
-                validation.healthScore < 50 && 'bg-rose-500/20 text-rose-200',
+                'ml-1 rounded-lg px-2 py-0.5 font-mono text-xs font-bold',
+                validation.healthScore >= 80 && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+                validation.healthScore >= 50 && validation.healthScore < 80 && 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+                validation.healthScore < 50 && 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300',
               )}
             >
               {validation.healthScore}
             </span>
           </button>
           {insightsOpen && (
-            <div className="studio-chrome rounded-xl p-3 text-xs">
-              <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-zinc-400">
-                <li>Peligros: {validation.stats.hazards}</li>
-                <li>Prev.: {validation.stats.barriersPreventive}</li>
-                <li>Mit.: {validation.stats.barriersMitigative}</li>
-                <li>Eventos: {validation.stats.topEvents}</li>
-                <li>Cons.: {validation.stats.consequences}</li>
-                <li>Aristas: {validation.stats.edges}</li>
+            <div className="pro-panel p-4 text-sm">
+              <ul className="grid grid-cols-2 gap-x-3 gap-y-1 font-medium text-slate-600 dark:text-slate-400">
+                <li>Peligros: <span className="text-rose-600 dark:text-rose-400">{validation.stats.hazards}</span></li>
+                <li>Prev.: <span className="text-amber-600 dark:text-amber-400">{validation.stats.barriersPreventive}</span></li>
+                <li>Mit.: <span className="text-sky-600 dark:text-sky-400">{validation.stats.barriersMitigative}</span></li>
+                <li>Eventos: <span className="text-slate-600 dark:text-slate-400">{validation.stats.topEvents}</span></li>
+                <li>Cons.: <span className="text-emerald-600 dark:text-emerald-400">{validation.stats.consequences}</span></li>
+                <li>Aristas: <span className="text-slate-500 dark:text-slate-400">{validation.stats.edges}</span></li>
               </ul>
               {validation.warnings.length > 0 && (
-                <ul className="mt-2 space-y-1 border-t border-zinc-800 pt-2 text-[11px] text-amber-200/90">
+                <ul className="mt-3 space-y-1.5 border-t border-slate-200 pt-3 text-xs font-medium text-amber-600 dark:text-amber-400">
                   {validation.warnings.map((w, i) => (
-                    <li key={`${i}-${w.slice(0, 24)}`} className="flex gap-1.5">
-                      <AlertTriangle className="mt-0.5 size-3 shrink-0 text-amber-500" />
+                    <li key={`${i}-${w.slice(0, 24)}`} className="flex gap-2">
+                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                       {w}
                     </li>
                   ))}
                 </ul>
               )}
-              <p className="mt-2 border-t border-zinc-800 pt-2 text-[10px] text-zinc-600">
+              <p className="mt-3 border-t border-slate-200 pt-3 text-xs font-medium text-slate-400 dark:text-slate-500">
                 Auto-guardado{' '}
                 {savedAt
                   ? savedAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
@@ -826,12 +826,12 @@ export function FlowWorkspace({
         </Panel>
 
         {primarySelected && !readOnly && (
-          <Panel position="bottom-right" className="studio-chrome m-3 w-[min(100%-1.5rem,280px)] rounded-xl p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Inspector</p>
-            <p className="mt-1 text-xs text-zinc-300">
+          <Panel position="bottom-right" className="pro-panel m-3 w-[min(100%-1.5rem,300px)]">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Inspector</p>
+            <p className="mt-1 text-sm font-bold text-slate-700 dark:text-slate-200">
               {NODE_TYPE_LABELS[String(primarySelected.type)] ?? primarySelected.type}
             </p>
-            <label className="mt-3 block text-[10px] uppercase tracking-wide text-zinc-500" htmlFor="insp-label">
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" htmlFor="insp-label">
               Texto
             </label>
             <textarea
@@ -839,14 +839,14 @@ export function FlowWorkspace({
               value={String(primarySelected.data?.label ?? '')}
               onChange={(e) => updateSelectedLabel(e.target.value)}
               rows={3}
-              className="nodrag nopan mt-1 w-full resize-none rounded-md border border-zinc-600 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/30"
+              className="nodrag nopan mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-400"
             />
             <button
               type="button"
               onClick={deleteSelected}
-              className="nodrag nopan mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-zinc-600 bg-zinc-950 py-2 text-xs font-medium text-zinc-300 hover:border-rose-900/60 hover:bg-rose-950/25"
+              className="nodrag nopan mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-2.5 text-sm font-bold text-rose-600 hover:border-rose-300 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
             >
-              <Trash2 className="size-3.5" />
+              <Trash2 className="size-4" />
               Eliminar selección
             </button>
           </Panel>

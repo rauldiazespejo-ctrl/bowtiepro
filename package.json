@@ -1,6 +1,15 @@
 {
-  "name": "webapp",
+  "name": "bowtie-studio-pro",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Professional bowtie diagram modeling tool for HSE and critical processes",
+  "author": "PULSO-AI <contacto@pulso-ai.com>",
+  "license": "MIT",
+  "homepage": "https://bowtiepro.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pulso-ai/bowtie-studio-pro"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run build:client",

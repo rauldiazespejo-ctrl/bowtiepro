@@ -3,14 +3,59 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import { FlowWorkspace } from './components/FlowWorkspace'
 import { cn } from './lib/cn'
+import { Moon, Sun } from 'lucide-react'
 
 export type SessionUser = { id: string; name: string; role: string; email?: string }
 
+function ThemeToggle({
+  isDark,
+  onToggle,
+}: {
+  isDark: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="theme-toggle"
+      aria-label={isDark ? 'Modo claro' : 'Modo oscuro'}
+    >
+      <span className={cn('theme-toggle-thumb', isDark ? 'dark' : 'light')}>
+        {isDark ? (
+          <Moon className="size-3.5 text-slate-700" />
+        ) : (
+          <Sun className="size-3.5 text-amber-500" />
+        )}
+      </span>
+    </button>
+  )
+}
+
 function BowtieMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={cn('shrink-0', className)} aria-hidden>
-      <path fill="currentColor" className="text-slate-600" d="M16 4 4 16 16 28 28 16 16 4z" />
-      <path fill="currentColor" className="text-slate-400/90" d="M16 9 9 16 16 23 23 16 16 9z" />
+    <svg viewBox="0 0 48 48" className={cn('shrink-0', className)} aria-hidden>
+      <defs>
+        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0ea5e9" />
+          <stop offset="50%" stopColor="#06b6d4" />
+          <stop offset="100%" stopColor="#14b8a6" />
+        </linearGradient>
+        <linearGradient id="logoGradInner" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#22d3ee" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <path fill="url(#logoGrad)" filter="url(#glow)" d="M24 4 4 24 24 44 44 24 24 4z" opacity="0.95" />
+      <path fill="url(#logoGradInner)" d="M24 12 12 24 24 36 36 24 24 12z" />
+      <circle fill="#0ea5e9" cx="24" cy="24" r="3" filter="url(#glow)" />
     </svg>
   )
 }
@@ -55,6 +100,25 @@ function WorkspaceShell() {
   const [shareEmail, setShareEmail] = useState('')
   const [demoDays, setDemoDays] = useState(30)
   const [demoUrl, setDemoUrl] = useState<string | null>(null)
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme')
+      if (saved) return saved === 'dark'
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+    return false
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (isDark) {
+      root.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      root.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [isDark])
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
@@ -190,35 +254,35 @@ function WorkspaceShell() {
   }, [showToast])
 
   return (
-    <div className="flex min-h-full flex-col bg-[var(--studio-bg,#090b0f)] text-zinc-100">
+    <div className="flex min-h-full flex-col bg-[var(--studio-bg)] text-[var(--text-primary)]">
       <header
         className={cn(
-          'flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 px-4 py-3 sm:px-6',
-          'bg-gradient-to-b from-[#12151c] to-[#0e1016]',
+          'header-pro flex shrink-0 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6',
         )}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/80 shadow-sm ring-1 ring-white/[0.04]">
+          <div className="flex size-11 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <BowtieMark className="size-[1.65rem]" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <h1 className="text-[15px] font-semibold tracking-tight text-zinc-50">Bowtie Studio</h1>
-              <span className="rounded border border-zinc-700/80 bg-zinc-900/60 px-1.5 py-0 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+              <h1 className="text-[17px] font-bold tracking-tight text-slate-800 dark:text-slate-100">Bowtie Studio</h1>
+              <span className="rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-600 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-400">
                 Pro
               </span>
             </div>
-            <p className="mt-0.5 max-w-[46ch] text-xs leading-snug text-zinc-500">
+            <p className="mt-0.5 max-w-[46ch] text-sm leading-snug text-slate-500 dark:text-slate-400">
               Modelado de barreras y diagramas bowtie para HSE y procesos críticos
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <ThemeToggle isDark={isDark} onToggle={() => setIsDark(!isDark)} />
           {diagrams.length > 0 && (
             <select
               value={diagramId ?? ''}
               onChange={(e) => setDiagramId(e.target.value || null)}
-              className="max-w-[200px] rounded-md border border-zinc-600 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-200"
+              className="max-w-[200px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               {diagrams.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -230,14 +294,14 @@ function WorkspaceShell() {
           <button
             type="button"
             onClick={() => setShareOpen(true)}
-            className="rounded-md border border-zinc-600 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+            className="pro-button"
           >
             Colaborar
           </button>
           <button
             type="button"
             onClick={() => setDemoOpen(true)}
-            className="rounded-md border border-zinc-600 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+            className="pro-button"
           >
             Demo
           </button>
@@ -245,7 +309,7 @@ function WorkspaceShell() {
             <button
               type="button"
               onClick={() => setAdminOpen(true)}
-              className="rounded-md border border-amber-900/50 bg-amber-950/30 px-2 py-1.5 text-xs text-amber-200 hover:bg-amber-950/50"
+              className="pro-button border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-300"
             >
               Crear usuario
             </button>
@@ -253,7 +317,7 @@ function WorkspaceShell() {
           <button
             type="button"
             onClick={() => void logout()}
-            className="rounded-md border border-zinc-600 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800"
+            className="pro-button border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-400"
           >
             Salir
           </button>
@@ -278,20 +342,20 @@ function WorkspaceShell() {
 
       {adminOpen && (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-4"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           onClick={() => setAdminOpen(false)}
         >
-          <div className="studio-chrome w-full max-w-md rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-zinc-50">Nuevo usuario</h2>
-            <p className="mt-1 text-xs text-zinc-500">Solo el superusuario puede crear cuentas.</p>
-            <form className="mt-4 space-y-3" onSubmit={createUser}>
+          <div className="pro-panel w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Nuevo usuario</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Solo el superusuario puede crear cuentas.</p>
+            <form className="mt-5 space-y-4" onSubmit={createUser}>
               <input
                 placeholder="Nombre"
                 value={newUserName}
                 onChange={(e) => setNewUserName(e.target.value)}
-                className="w-full rounded-md border border-zinc-600 bg-zinc-950 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
               />
               <input
                 type="email"
@@ -299,7 +363,7 @@ function WorkspaceShell() {
                 placeholder="Email"
                 value={newUserEmail}
                 onChange={(e) => setNewUserEmail(e.target.value)}
-                className="w-full rounded-md border border-zinc-600 bg-zinc-950 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
               />
               <input
                 type="password"
@@ -308,14 +372,14 @@ function WorkspaceShell() {
                 placeholder="Contraseña (mín. 6)"
                 value={newUserPass}
                 onChange={(e) => setNewUserPass(e.target.value)}
-                className="w-full rounded-md border border-zinc-600 bg-zinc-950 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
               />
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" className="rounded-md px-3 py-2 text-xs text-zinc-400" onClick={() => setAdminOpen(false)}>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" onClick={() => setAdminOpen(false)}>
                   Cancelar
                 </button>
-                <button type="submit" className="rounded-md border border-zinc-500 bg-zinc-800 px-3 py-2 text-xs text-zinc-100">
-                  Crear
+                <button type="submit" className="pro-button-primary">
+                  Crear usuario
                 </button>
               </div>
             </form>
@@ -325,26 +389,26 @@ function WorkspaceShell() {
 
       {shareOpen && (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-4"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
           onClick={() => setShareOpen(false)}
         >
-          <div className="studio-chrome relative z-10 w-full max-w-md rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-zinc-50">Invitar colaborador</h2>
-            <p className="mt-1 text-xs text-zinc-500">El usuario debe existir (email registrado). Podrá editar este diagrama.</p>
-            <form className="mt-4 space-y-3" onSubmit={shareDiagram}>
+          <div className="pro-panel relative z-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Invitar colaborador</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">El usuario debe existir (email registrado). Podrá editar este diagrama.</p>
+            <form className="mt-5 space-y-4" onSubmit={shareDiagram}>
               <input
                 type="email"
                 required
                 placeholder="Email del colaborador"
                 value={shareEmail}
                 onChange={(e) => setShareEmail(e.target.value)}
-                className="w-full rounded-md border border-zinc-600 bg-zinc-950 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
               />
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" className="rounded-md px-3 py-2 text-xs text-zinc-400" onClick={() => setShareOpen(false)}>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" onClick={() => setShareOpen(false)}>
                   Cancelar
                 </button>
-                <button type="submit" className="rounded-md border border-zinc-500 bg-zinc-800 px-3 py-2 text-xs text-zinc-100">
+                <button type="submit" className="pro-button-primary">
                   Invitar
                 </button>
               </div>
@@ -355,32 +419,32 @@ function WorkspaceShell() {
 
       {demoOpen && (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-4"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
           onClick={() => {
             setDemoOpen(false)
             setDemoUrl(null)
           }}
         >
-          <div className="studio-chrome relative z-10 w-full max-w-md rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-zinc-50">Enlace demo (solo lectura)</h2>
-            <p className="mt-1 text-xs text-zinc-500">Copia el enlace para compartir una vista fija del diagrama actual.</p>
-            <form className="mt-4 space-y-3" onSubmit={createDemoLink}>
-              <label className="text-xs text-zinc-500">Caduca en (días)</label>
+          <div className="pro-panel relative z-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Enlace demo (solo lectura)</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Copia el enlace para compartir una vista fija del diagrama actual.</p>
+            <form className="mt-5 space-y-4" onSubmit={createDemoLink}>
+              <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">Caduca en (días)</label>
               <input
                 type="number"
                 min={1}
                 max={90}
                 value={demoDays}
                 onChange={(e) => setDemoDays(Number(e.target.value) || 30)}
-                className="w-full rounded-md border border-zinc-600 bg-zinc-950 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
               />
               {demoUrl && (
-                <div className="break-all rounded-md border border-zinc-700 bg-zinc-950 p-2 text-xs text-zinc-300">{demoUrl}</div>
+                <div className="break-all rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-sky-600 dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">{demoUrl}</div>
               )}
-              <div className="flex flex-wrap justify-end gap-2 pt-2">
+              <div className="flex flex-wrap justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  className="rounded-md px-3 py-2 text-xs text-zinc-400"
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                   onClick={() => {
                     setDemoOpen(false)
                     setDemoUrl(null)
@@ -391,13 +455,13 @@ function WorkspaceShell() {
                 {demoUrl && (
                   <button
                     type="button"
-                    className="rounded-md border border-zinc-500 bg-zinc-800 px-3 py-2 text-xs text-zinc-100"
+                    className="pro-button"
                     onClick={() => void navigator.clipboard.writeText(demoUrl)}
                   >
                     Copiar enlace
                   </button>
                 )}
-                <button type="submit" className="rounded-md border border-zinc-500 bg-zinc-800 px-3 py-2 text-xs text-zinc-100">
+                <button type="submit" className="pro-button-primary">
                   Generar
                 </button>
               </div>
@@ -413,7 +477,7 @@ function WorkspaceShell() {
         )}
       >
         {toast && (
-          <div className="pointer-events-auto border-l-2 border-l-slate-500/80 bg-zinc-900/95 px-5 py-2.5 text-sm text-zinc-200 shadow-lg ring-1 ring-zinc-700/80">
+          <div className="pointer-events-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-xl ring-1 ring-slate-200/50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
             {toast}
           </div>
         )}
