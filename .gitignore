@@ -9,6 +9,7 @@ pids
 
 # Compiled binary addons
 build
+release/
 
 # Local LibSQL / SQLite (dev)
 .data/

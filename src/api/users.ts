@@ -1,19 +1,19 @@
 import { Hono } from 'hono'
 import bcrypt from 'bcryptjs'
-import { ensureDb, getDb } from '../server/db'
+import { ensureDb, getSql } from '../server/db'
 import { readSession } from '../server/session'
 
 const users = new Hono()
 
 users.use('*', async (c, next) => {
-  await ensureDb()
+  await ensureDb(c)
   await next()
 })
 
 users.get('/me', async (c) => {
   const s = await readSession(c)
   if (!s) return c.json({ error: 'No autorizado' }, 401)
-  const row = await getDb().execute({
+  const row = await getSql(c).execute({
     sql: 'SELECT id, email, name, role FROM users WHERE id = ? LIMIT 1',
     args: [s.sub],
   })
@@ -32,7 +32,7 @@ users.get('/me', async (c) => {
 users.post('/', async (c) => {
   const s = await readSession(c)
   if (!s) return c.json({ error: 'No autorizado' }, 401)
-  const superRow = await getDb().execute({
+  const superRow = await getSql(c).execute({
     sql: 'SELECT role FROM users WHERE id = ? LIMIT 1',
     args: [s.sub],
   })
@@ -50,7 +50,7 @@ users.post('/', async (c) => {
   if (password.length < 6) {
     return c.json({ error: 'La contraseña debe tener al menos 6 caracteres' }, 400)
   }
-  const exists = await getDb().execute({
+  const exists = await getSql(c).execute({
     sql: 'SELECT id FROM users WHERE email = ? LIMIT 1',
     args: [email],
   })
@@ -60,7 +60,7 @@ users.post('/', async (c) => {
   const id = crypto.randomUUID()
   const hash = bcrypt.hashSync(password, 10)
   const now = Date.now()
-  await getDb().execute({
+  await getSql(c).execute({
     sql: `INSERT INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, 'user', ?)`,
     args: [id, email, hash, name, now],
   })

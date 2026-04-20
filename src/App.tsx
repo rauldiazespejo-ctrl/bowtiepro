@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import { FlowWorkspace } from './components/FlowWorkspace'
 import { cn } from './lib/cn'
-import { Moon, Sun } from 'lucide-react'
+import { Loader2, Moon, Pencil, Plus, Sun } from 'lucide-react'
 
 export type SessionUser = { id: string; name: string; role: string; email?: string }
 
@@ -60,6 +60,20 @@ function BowtieMark({ className }: { className?: string }) {
   )
 }
 
+function SessionBootScreen() {
+  return (
+    <div className="flex min-h-full flex-col items-center justify-center gap-5 bg-[var(--studio-bg,#090b0f)] px-4">
+      <div className="relative flex size-[4.25rem] items-center justify-center rounded-2xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <BowtieMark className="size-11" />
+        <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-950">
+          <Loader2 className="size-4 animate-spin text-sky-600 dark:text-sky-400" aria-hidden />
+        </span>
+      </div>
+      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Cargando sesión…</p>
+    </div>
+  )
+}
+
 export function App() {
   const [auth, setAuth] = useState<'loading' | 'in' | 'out'>('loading')
 
@@ -71,11 +85,7 @@ export function App() {
   }, [])
 
   if (auth === 'loading') {
-    return (
-      <div className="flex min-h-full items-center justify-center bg-[var(--studio-bg,#090b0f)] text-zinc-500">
-        Cargando sesión…
-      </div>
-    )
+    return <SessionBootScreen />
   }
   if (auth === 'out') {
     return <Navigate to="/login" replace />
@@ -91,6 +101,13 @@ function WorkspaceShell() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [diagramId, setDiagramId] = useState<string | null>(null)
   const [diagrams, setDiagrams] = useState<{ id: string; title: string }[]>([])
+  const [diagramServerVersion, setDiagramServerVersion] = useState<number | null>(null)
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [renameTitle, setRenameTitle] = useState('')
+  const [renameBusy, setRenameBusy] = useState(false)
+  const [newDiagramOpen, setNewDiagramOpen] = useState(false)
+  const [newDiagramTitle, setNewDiagramTitle] = useState('Nuevo diagrama')
+  const [newDiagramBusy, setNewDiagramBusy] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [demoOpen, setDemoOpen] = useState(false)
@@ -175,6 +192,10 @@ function WorkspaceShell() {
     }
   }, [])
 
+  useEffect(() => {
+    setDiagramServerVersion(null)
+  }, [diagramId])
+
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     nav('/login', { replace: true })
@@ -221,6 +242,80 @@ function WorkspaceShell() {
     showToast('Colaborador añadido (debe estar registrado)')
     setShareEmail('')
     setShareOpen(false)
+  }
+
+  const submitRenameDiagram = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!diagramId) return
+    const title = renameTitle.trim()
+    if (!title) {
+      showToast('El título no puede estar vacío')
+      return
+    }
+    if (diagramServerVersion == null) {
+      showToast('Espera a que cargue el diagrama')
+      return
+    }
+    setRenameBusy(true)
+    try {
+      const res = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, version: diagramServerVersion }),
+      })
+      const data = (await res.json()) as { error?: string; version?: number; title?: string; currentVersion?: number }
+      if (res.status === 409) {
+        const cur = data.currentVersion
+        if (typeof cur === 'number') {
+          setDiagramServerVersion(cur)
+        }
+        const r2 = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}`, { credentials: 'include' })
+        if (r2.ok) {
+          const j = (await r2.json()) as { title: string; version: number }
+          setDiagramServerVersion(j.version)
+          setRenameTitle(j.title)
+        }
+        showToast('Otro cambio llegó antes; título y versión sincronizados. Vuelve a guardar el nombre si hace falta.')
+        return
+      }
+      if (!res.ok || data.version == null) {
+        showToast(data.error ?? 'No se pudo renombrar')
+        return
+      }
+      setDiagramServerVersion(data.version)
+      setDiagrams((prev) => prev.map((d) => (d.id === diagramId ? { ...d, title: data.title ?? title } : d)))
+      showToast('Diagrama renombrado')
+      setRenameOpen(false)
+    } finally {
+      setRenameBusy(false)
+    }
+  }
+
+  const submitNewDiagram = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const title = newDiagramTitle.trim() || 'Nuevo diagrama'
+    setNewDiagramBusy(true)
+    try {
+      const res = await fetch('/api/diagrams', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      })
+      const data = (await res.json()) as { error?: string; id?: string; title?: string }
+      if (!res.ok || !data.id) {
+        showToast(data.error ?? 'No se pudo crear el diagrama')
+        return
+      }
+      setDiagrams((prev) => [{ id: data.id!, title: data.title ?? title }, ...prev])
+      setDiagramId(data.id)
+      setNewDiagramOpen(false)
+      setNewDiagramTitle('Nuevo diagrama')
+      showToast('Diagrama creado')
+    } finally {
+      setNewDiagramBusy(false)
+    }
   }
 
   const createDemoLink = async (e: React.FormEvent) => {
@@ -278,18 +373,51 @@ function WorkspaceShell() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <ThemeToggle isDark={isDark} onToggle={() => setIsDark(!isDark)} />
+          {savedAt && (
+            <span className="hidden text-xs font-medium text-slate-400 sm:inline dark:text-slate-500" title="Último guardado en el servidor">
+              Guardado{' '}
+              {savedAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          )}
           {diagrams.length > 0 && (
-            <select
-              value={diagramId ?? ''}
-              onChange={(e) => setDiagramId(e.target.value || null)}
-              className="max-w-[200px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-            >
-              {diagrams.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.title}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={diagramId ?? ''}
+                onChange={(e) => setDiagramId(e.target.value || null)}
+                className="max-w-[min(220px,45vw)] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                aria-label="Seleccionar diagrama"
+              >
+                {diagrams.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.title}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  const t = diagrams.find((d) => d.id === diagramId)?.title ?? ''
+                  setRenameTitle(t)
+                  setRenameOpen(true)
+                }}
+                className="pro-button inline-flex items-center gap-1.5 px-2.5 py-2"
+                aria-label="Renombrar diagrama"
+                title="Renombrar diagrama"
+              >
+                <Pencil className="size-4 shrink-0 opacity-80" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNewDiagramTitle('Nuevo diagrama')
+                  setNewDiagramOpen(true)
+                }}
+                className="pro-button inline-flex items-center gap-1.5 border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400"
+              >
+                <Plus className="size-4 shrink-0" />
+                Nuevo
+              </button>
+            </div>
           )}
           <button
             type="button"
@@ -335,10 +463,96 @@ function WorkspaceShell() {
               shortcutsOpen={shortcutsOpen}
               setShortcutsOpen={setShortcutsOpen}
               remoteDiagramId={diagramId}
+              onDiagramVersionChange={setDiagramServerVersion}
+              serverVersionHint={diagramServerVersion}
             />
           </ReactFlowProvider>
         )}
       </main>
+
+      {renameOpen && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rename-dlg-title"
+          onClick={() => !renameBusy && setRenameOpen(false)}
+        >
+          <div className="pro-panel w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h2 id="rename-dlg-title" className="text-lg font-bold text-slate-800 dark:text-slate-100">
+              Renombrar diagrama
+            </h2>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              El nombre se guarda en el servidor y queda visible para los colaboradores.
+            </p>
+            <form className="mt-5 space-y-4" onSubmit={submitRenameDiagram}>
+              <input
+                value={renameTitle}
+                onChange={(e) => setRenameTitle(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
+                placeholder="Título del diagrama"
+                autoFocus
+                maxLength={120}
+              />
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={renameBusy}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 disabled:opacity-50 dark:text-slate-400 dark:hover:text-slate-200"
+                  onClick={() => setRenameOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" disabled={renameBusy || diagramServerVersion == null} className="pro-button-primary">
+                  {renameBusy ? 'Guardando…' : 'Guardar nombre'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {newDiagramOpen && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="new-dlg-title"
+          onClick={() => !newDiagramBusy && setNewDiagramOpen(false)}
+        >
+          <div className="pro-panel w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h2 id="new-dlg-title" className="text-lg font-bold text-slate-800 dark:text-slate-100">
+              Nuevo diagrama
+            </h2>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              Se crea una plantilla bowtie vacía en tu cuenta.
+            </p>
+            <form className="mt-5 space-y-4" onSubmit={submitNewDiagram}>
+              <input
+                value={newDiagramTitle}
+                onChange={(e) => setNewDiagramTitle(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
+                placeholder="Título"
+                autoFocus
+                maxLength={120}
+              />
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={newDiagramBusy}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 disabled:opacity-50 dark:text-slate-400 dark:hover:text-slate-200"
+                  onClick={() => setNewDiagramOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" disabled={newDiagramBusy} className="pro-button-primary">
+                  {newDiagramBusy ? 'Creando…' : 'Crear'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {adminOpen && (
         <div

@@ -67,9 +67,24 @@ export function LoginPage() {
         credentials: 'include',
         body: JSON.stringify({ email: email.trim(), password }),
       })
-      const data = (await res.json()) as { ok?: boolean; error?: string }
+      const raw = await res.text()
+      let data: { ok?: boolean; error?: string } = {}
+      if (raw) {
+        try {
+          data = JSON.parse(raw) as { ok?: boolean; error?: string }
+        } catch {
+          /* cuerpo no JSON */
+        }
+      }
       if (!res.ok || !data.ok) {
-        setErr(data.error ?? 'No se pudo iniciar sesión')
+        setErr(
+          data.error ??
+            (res.status === 503
+              ? 'Servicio no disponible: revisa la configuración del servidor.'
+              : res.status >= 500
+                ? `Error del servidor (${res.status})`
+                : 'No se pudo iniciar sesión'),
+        )
         return
       }
       nav('/', { replace: true })

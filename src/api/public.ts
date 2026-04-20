@@ -1,17 +1,17 @@
 import { Hono } from 'hono'
-import { ensureDb, getDb } from '../server/db'
+import { ensureDb, getSql } from '../server/db'
 
 const publicApi = new Hono()
 
 publicApi.use('*', async (c, next) => {
-  await ensureDb()
+  await ensureDb(c)
   await next()
 })
 
 /** Lectura pública de una versión demo (sin sesión). */
 publicApi.get('/demo/:token', async (c) => {
   const token = c.req.param('token')
-  const row = await getDb().execute({
+  const row = await getSql(c).execute({
     sql: 'SELECT title, nodes_json, edges_json, expires_at FROM demo_links WHERE token = ? LIMIT 1',
     args: [token],
   })

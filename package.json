@@ -5,6 +5,7 @@
   "description": "Professional bowtie diagram modeling tool for HSE and critical processes",
   "author": "PULSO-AI <contacto@pulso-ai.com>",
   "license": "MIT",
+  "main": "electron/main.mjs",
   "homepage": "https://bowtiepro.com",
   "repository": {
     "type": "git",
@@ -21,7 +22,26 @@
     "deploy:vercel": "npm run build:vercel && npx vercel deploy --prebuilt",
     "respaldar": "git add -A && git diff --cached --quiet || (git commit -m \"chore: respaldo $(date -u +%Y-%m-%d)\" && git push origin HEAD)",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "build:client": "vite build -c vite.client.config.ts"
+    "cf:provision": "node scripts/provision-d1.mjs",
+    "build:client": "vite build -c vite.client.config.ts",
+    "desktop": "electron .",
+    "desktop:build": "electron-builder --publish never"
+  },
+  "build": {
+    "appId": "com.pulsoai.bowtie-studio",
+    "productName": "Bowtie Studio Pro",
+    "copyright": "Copyright © PULSO-AI",
+    "files": ["electron/**/*", "package.json"],
+    "directories": { "output": "release" },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"],
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "win": { "target": ["portable"] },
+    "linux": { "target": ["AppImage"] }
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",
@@ -48,6 +68,8 @@
     "@vitejs/plugin-react": "^4.7.0",
     "tailwindcss": "^4.2.2",
     "vite": "^6.3.5",
-    "wrangler": "^4.4.0"
+    "wrangler": "^4.4.0",
+    "electron": "^35.1.2",
+    "electron-builder": "^26.0.12"
   }
 }

@@ -33,16 +33,24 @@ export async function readSession(c: Context): Promise<SessionPayload | null> {
   }
 }
 
+function cookieSecure(c: Context): boolean {
+  try {
+    return new URL(c.req.url).protocol === 'https:'
+  } catch {
+    return process.env.NODE_ENV === 'production'
+  }
+}
+
 export function setSessionCookie(c: Context, token: string) {
   setCookie(c, COOKIE, token, {
     path: '/',
     httpOnly: true,
     sameSite: 'Lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: cookieSecure(c),
     maxAge: 60 * 60 * 24 * 14,
   })
 }
 
 export function clearSessionCookie(c: Context) {
-  deleteCookie(c, COOKIE, { path: '/' })
+  deleteCookie(c, COOKIE, { path: '/', secure: cookieSecure(c) })
 }

@@ -443,6 +443,8 @@ export function FlowWorkspace({
   remoteDiagramId = null,
   demoToken = null,
   readOnly = false,
+  onDiagramVersionChange,
+  serverVersionHint = null,
 }: {
   user: SessionUser | null
   onToast: (msg: string) => void
@@ -455,11 +457,22 @@ export function FlowWorkspace({
   /** Cargar snapshot demo público. */
   demoToken?: string | null
   readOnly?: boolean
+  /** Versión del diagrama en servidor (carga, guardado, sincronización). */
+  onDiagramVersionChange?: (version: number) => void
+  /** Tras renombrar u otras acciones en el padre, alinear la versión optimista. */
+  serverVersionHint?: number | null
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[])
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[])
   const [canvasReady, setCanvasReady] = useState(false)
   const versionRef = useRef(1)
+  const onVersionParentRef = useRef(onDiagramVersionChange)
+  onVersionParentRef.current = onDiagramVersionChange
+
+  const assignVersion = useCallback((v: number) => {
+    versionRef.current = v
+    onVersionParentRef.current?.(v)
+  }, [])
   const [insightsOpen, setInsightsOpen] = useState(true)
   const [selected, setSelected] = useState<OnSelectionChangeParams>({ nodes: [], edges: [] })
 
@@ -498,14 +511,14 @@ export function FlowWorkspace({
           if (!cancelled) {
             setNodes(layoutBowtie(tpl.nodes))
             setEdges(tpl.edges)
-            versionRef.current = 1
+            assignVersion(1)
             setCanvasReady(true)
           }
           return
         }
         const data = (await res.json()) as { nodes: Node[]; edges: Edge[]; version: number }
         if (!cancelled) {
-          versionRef.current = data.version
+          assignVersion(data.version)
           setNodes(layoutBowtie(data.nodes))
           setEdges(data.edges)
           setCanvasReady(true)
@@ -532,7 +545,14 @@ export function FlowWorkspace({
     return () => {
       cancelled = true
     }
-  }, [demoToken, remoteDiagramId, onToast, setEdges, setNodes])
+  }, [demoToken, remoteDiagramId, onToast, setEdges, setNodes, assignVersion])
+
+  useEffect(() => {
+    if (serverVersionHint == null) return
+    if (serverVersionHint > versionRef.current) {
+      versionRef.current = serverVersionHint
+    }
+  }, [serverVersionHint])
 
   useEffect(() => {
     if (!canvasReady) return
@@ -563,7 +583,7 @@ export function FlowWorkspace({
             })
             if (r2.ok) {
               const j = (await r2.json()) as { nodes: Node[]; edges: Edge[]; version: number }
-              versionRef.current = j.version
+              assignVersion(j.version)
               setNodes(layoutBowtie(j.nodes))
               setEdges(j.edges)
               onToast('Otro colaborador editó el diagrama; se sincronizó')
@@ -572,7 +592,7 @@ export function FlowWorkspace({
           }
           if (!res.ok) return
           const j = (await res.json()) as { version: number }
-          versionRef.current = j.version
+          assignVersion(j.version)
           setSavedAt(new Date())
         } catch {
           /* ignore */
@@ -580,7 +600,7 @@ export function FlowWorkspace({
       })()
     }, 1200)
     return () => clearTimeout(t)
-  }, [nodes, edges, remoteDiagramId, demoToken, readOnly, canvasReady, setSavedAt, onToast, setEdges, setNodes])
+  }, [nodes, edges, remoteDiagramId, demoToken, readOnly, canvasReady, setSavedAt, onToast, setEdges, setNodes, assignVersion])
 
   useEffect(() => {
     if (!canvasReady || !remoteDiagramId || demoToken || readOnly) return
@@ -593,7 +613,7 @@ export function FlowWorkspace({
           if (!res.ok) return
           const j = (await res.json()) as { version: number; nodes: Node[]; edges: Edge[] }
           if (j.version > versionRef.current) {
-            versionRef.current = j.version
+            assignVersion(j.version)
             setNodes(layoutBowtie(j.nodes))
             setEdges(j.edges)
             onToast('Cambios de un colaborador aplicados')
@@ -604,7 +624,7 @@ export function FlowWorkspace({
       })()
     }, 12000)
     return () => window.clearInterval(id)
-  }, [canvasReady, remoteDiagramId, demoToken, readOnly, onToast, setEdges, setNodes])
+  }, [canvasReady, remoteDiagramId, demoToken, readOnly, onToast, setEdges, setNodes, assignVersion])
 
   const onNodesChangeWrapped = useCallback(
     (changes: NodeChange[]) => {

@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import bcrypt from 'bcryptjs'
-import { ensureDb, getDb } from '../server/db'
+import { ensureDb, getSql } from '../server/db'
 import { clearSessionCookie, createSessionToken, readSession, setSessionCookie } from '../server/session'
 
 const auth = new Hono()
 
 auth.use('*', async (c, next) => {
-  await ensureDb()
+  await ensureDb(c)
   await next()
 })
 
@@ -17,7 +17,7 @@ auth.post('/login', async (c) => {
   if (!email || !password) {
     return c.json({ ok: false, error: 'Email y contraseña son obligatorios' }, 400)
   }
-  const row = await getDb().execute({
+  const row = await getSql(c).execute({
     sql: 'SELECT id, email, name, role, password_hash FROM users WHERE email = ? LIMIT 1',
     args: [email],
   })
@@ -50,7 +50,7 @@ auth.post('/login', async (c) => {
 auth.get('/session', async (c) => {
   const s = await readSession(c)
   if (!s) return c.json({ authenticated: false, user: null })
-  const row = await getDb().execute({
+  const row = await getSql(c).execute({
     sql: 'SELECT id, email, name, role FROM users WHERE id = ? LIMIT 1',
     args: [s.sub],
   })
