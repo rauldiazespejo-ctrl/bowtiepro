@@ -8,9 +8,9 @@ type CreateClientFn = typeof import('@libsql/client').createClient
 type Client = import('@libsql/client').Client
 
 function normalizeLibsqlUrl(url: string): string {
-  if (url.startsWith('libsql://')) return url.replace('libsql://', 'https://')
-  if (url.startsWith('wss://')) return url.replace('wss://', 'https://')
-  return url
+  const clean = url.trim()
+  if (clean.startsWith('wss://')) return clean.replace('wss://', 'https://')
+  return clean
 }
 
 async function loadCreateClient(): Promise<CreateClientFn> {
@@ -96,7 +96,8 @@ async function getLibsqlRawClientAsync(): Promise<Client> {
         try { mkdirSync(dir, { recursive: true }) } catch { /* exists */ }
         return `file:${join(dir, 'bowtie.db')}`
       })()
-      libsqlClient = createClient({ url: normalizeLibsqlUrl(url), authToken: process.env.LIBSQL_AUTH_TOKEN ?? process.env.TURSO_AUTH_TOKEN })
+      const authToken = (process.env.LIBSQL_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN || '').trim() || undefined
+      libsqlClient = createClient({ url: normalizeLibsqlUrl(url), authToken })
       return libsqlClient
     })()
   }

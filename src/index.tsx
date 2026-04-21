@@ -33,7 +33,8 @@ app.get('/api/health', async (c) => {
     await sql.execute({ sql: 'SELECT 1', args: [] })
     return c.json({ ok: true, url: url.slice(0, 30) + '…', hasToken, dbEnvKeys })
   } catch (e) {
-    return c.json({ ok: false, url: url.slice(0, 30) + '…', hasToken, dbEnvKeys, error: String(e) }, 503)
+    const err = e instanceof Error ? { msg: e.message, stack: e.stack?.split('\n').slice(0,5).join(' | ') } : String(e)
+    return c.json({ ok: false, url: url.slice(0, 30) + '…', hasToken, dbEnvKeys, error: err }, 503)
   }
 })
 
