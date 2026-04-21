@@ -263,4 +263,75 @@ diagrams.patch('/:id', async (c) => {
   return c.json({ ok: true, title, version: next, updatedAt: now })
 })
 
+diagrams.delete('/:id', async (c) => {
+  const s = await requireUser(c)
+  if (!s) return c.json({ error: 'No autorizado' }, 401)
+  const id = c.req.param('id')
+  const row = await getSql(c).execute({
+    sql: 'SELECT owner_id FROM diagrams WHERE id = ? LIMIT 1',
+    args: [id],
+  })
+  if (row.rows.length === 0) return c.json({ error: 'No encontrado' }, 404)
+  const ownerId = (row.rows[0] as { owner_id: string }).owner_id
+  const me = await getSql(c).execute({
+    sql: 'SELECT role FROM users WHERE id = ? LIMIT 1',
+    args: [s.sub],
+  })
+  const myRole = (me.rows[0] as { role: string }).role
+  if (ownerId !== s.sub && myRole !== 'super') {
+    return c.json({ error: 'Solo el propietario puede eliminar el diagrama' }, 403)
+  }
+  await getSql(c).execute({ sql: 'DELETE FROM diagram_access WHERE diagram_id = ?', args: [id] })
+  await getSql(c).execute({ sql: 'DELETE FROM diagrams WHERE id = ?', args: [id] })
+  return c.json({ ok: true })
+})
+
+diagrams.post('/:id/duplicate', async (c) => {
+  const s = await requireUser(c)
+  if (!s) return c.json({ error: 'No autorizado' }, 401)
+  const srcId = c.req.param('id')
+  if (!(await canViewDiagram(c, srcId, s.sub))) return c.json({ error: 'No encontrado' }, 404)
+  const row = await getSql(c).execute({
+    sql: 'SELECT title, nodes_json, edges_json FROM diagrams WHERE id = ? LIMIT 1',
+    args: [srcId],
+  })
+  if (row.rows.length === 0) return c.json({ error: 'No encontrado' }, 404)
+  const d = row.rows[0] as { title: string; nodes_json: string; edges_json: string }
+  const newId = crypto.randomUUID()
+  const newTitle = `${d.title} (copia)`
+  const now = Date.now()
+  await getSql(c).execute({
+    sql: `INSERT INTO diagrams (id, owner_id, title, nodes_json, edges_json, version, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
+    args: [newId, s.sub, newTitle, d.nodes_json, d.edges_json, now, now],
+  })
+  return c.json({ id: newId, title: newTitle, version: 1 })
+})
+
+diagrams.delete('/:id/access/:userId', async (c) => {
+  const s = await requireUser(c)
+  if (!s) return c.json({ error: 'No autorizado' }, 401)
+  const diagramId = c.req.param('id')
+  const targetUserId = c.req.param('userId')
+  const ownerRow = await getSql(c).execute({
+    sql: 'SELECT owner_id FROM diagrams WHERE id = ? LIMIT 1',
+    args: [diagramId],
+  })
+  if (ownerRow.rows.length === 0) return c.json({ error: 'No encontrado' }, 404)
+  const ownerId = (ownerRow.rows[0] as { owner_id: string }).owner_id
+  const me = await getSql(c).execute({
+    sql: 'SELECT role FROM users WHERE id = ? LIMIT 1',
+    args: [s.sub],
+  })
+  const myRole = (me.rows[0] as { role: string }).role
+  if (ownerId !== s.sub && myRole !== 'super') {
+    return c.json({ error: 'Solo el propietario puede revocar acceso' }, 403)
+  }
+  await getSql(c).execute({
+    sql: 'DELETE FROM diagram_access WHERE diagram_id = ? AND user_id = ?',
+    args: [diagramId, targetUserId],
+  })
+  return c.json({ ok: true })
+})
+
 export default diagrams

@@ -1,11 +1,31 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import { FlowWorkspace } from './components/FlowWorkspace'
+import { BowtieMark } from './components/BowtieMark'
 import { cn } from './lib/cn'
-import { Loader2, Moon, Pencil, Plus, Sun } from 'lucide-react'
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Link2,
+  Loader2,
+  LogOut,
+  Moon,
+  Pencil,
+  Plus,
+  Search,
+  Shield,
+  Sun,
+  Trash2,
+  Users,
+  X,
+} from 'lucide-react'
 
 export type SessionUser = { id: string; name: string; role: string; email?: string }
+
+type DiagramEntry = { id: string; title: string; myRole: string }
+type Collaborator = { id: string; name: string; email: string; role: string }
 
 function ThemeToggle({
   isDark,
@@ -32,34 +52,6 @@ function ThemeToggle({
   )
 }
 
-function BowtieMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={cn('shrink-0', className)} aria-hidden>
-      <defs>
-        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0ea5e9" />
-          <stop offset="50%" stopColor="#06b6d4" />
-          <stop offset="100%" stopColor="#14b8a6" />
-        </linearGradient>
-        <linearGradient id="logoGradInner" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#22d3ee" />
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <path fill="url(#logoGrad)" filter="url(#glow)" d="M24 4 4 24 24 44 44 24 24 4z" opacity="0.95" />
-      <path fill="url(#logoGradInner)" d="M24 12 12 24 24 36 36 24 24 12z" />
-      <circle fill="#0ea5e9" cx="24" cy="24" r="3" filter="url(#glow)" />
-    </svg>
-  )
-}
-
 function SessionBootScreen() {
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-5 bg-[var(--studio-bg,#090b0f)] px-4">
@@ -70,6 +62,240 @@ function SessionBootScreen() {
         </span>
       </div>
       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Cargando sesión…</p>
+    </div>
+  )
+}
+
+function DiagramPicker({
+  diagrams,
+  diagramId,
+  onSelect,
+  onRenameClick,
+  onDuplicate,
+  onDeleteClick,
+  onNew,
+}: {
+  diagrams: DiagramEntry[]
+  diagramId: string | null
+  onSelect: (id: string) => void
+  onRenameClick: (id: string, title: string) => void
+  onDuplicate: (id: string) => void
+  onDeleteClick: (id: string) => void
+  onNew: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  const filtered = diagrams.filter((d) =>
+    d.title.toLowerCase().includes(search.toLowerCase()),
+  )
+  const current = diagrams.find((d) => d.id === diagramId)
+
+  useEffect(() => {
+    if (open) setTimeout(() => searchRef.current?.focus(), 50)
+    else setSearch('')
+  }, [open])
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex max-w-[min(220px,38vw)] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:shadow dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+        aria-label="Seleccionar diagrama"
+      >
+        <span className="min-w-0 truncate">{current?.title ?? 'Seleccionar…'}</span>
+        <ChevronDown className={cn('size-3.5 shrink-0 transition-transform text-slate-400', open && 'rotate-180')} />
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 cursor-default"
+            aria-label="Cerrar"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute left-0 top-full z-50 mt-1.5 w-80 rounded-xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/50 dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800">
+              <Search className="size-4 shrink-0 text-slate-400" />
+              <input
+                ref={searchRef}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar diagrama…"
+                className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
+              />
+              {search && (
+                <button type="button" onClick={() => setSearch('')}>
+                  <X className="size-3.5 text-slate-400 hover:text-slate-600" />
+                </button>
+              )}
+            </div>
+            <ul className="max-h-60 overflow-y-auto py-1">
+              {filtered.map((d) => (
+                <li key={d.id} className={cn('group flex items-center gap-1 px-2 py-1', d.id === diagramId && 'bg-sky-50 dark:bg-sky-950/30')}>
+                  <button
+                    type="button"
+                    className="min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    onClick={() => { onSelect(d.id); setOpen(false) }}
+                  >
+                    {d.title}
+                    {d.myRole !== 'owner' && (
+                      <span className="ml-1.5 text-[10px] font-bold uppercase text-slate-400">{d.myRole}</span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    title="Renombrar"
+                    className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                    onClick={() => { onRenameClick(d.id, d.title); setOpen(false) }}
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Duplicar"
+                    className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                    onClick={() => { onDuplicate(d.id); setOpen(false) }}
+                  >
+                    <Copy className="size-3.5" />
+                  </button>
+                  {d.myRole === 'owner' && (
+                    <button
+                      type="button"
+                      title="Eliminar"
+                      className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30"
+                      onClick={() => { onDeleteClick(d.id); setOpen(false) }}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
+                </li>
+              ))}
+              {filtered.length === 0 && (
+                <li className="px-4 py-3 text-center text-sm text-slate-400">Sin resultados</li>
+              )}
+            </ul>
+            <div className="border-t border-slate-100 p-2 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => { onNew(); setOpen(false) }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+              >
+                <Plus className="size-4" />
+                Nuevo diagrama
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function UserMenu({
+  user,
+  onLogout,
+  onShare,
+  onDemo,
+  onAdmin,
+}: {
+  user: SessionUser | null
+  onLogout: () => void
+  onShare: () => void
+  onDemo: () => void
+  onAdmin: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const initials = user
+    ? user.name
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : '?'
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex size-9 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700 ring-2 ring-transparent transition-all hover:ring-sky-300 dark:bg-sky-900/40 dark:text-sky-300 dark:hover:ring-sky-700"
+        aria-label="Menú de usuario"
+      >
+        {initials}
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 cursor-default"
+            aria-label="Cerrar"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute right-0 top-full z-50 mt-1.5 w-56 rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            {user && (
+              <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                <p className="truncate text-sm font-bold text-slate-800 dark:text-slate-100">{user.name}</p>
+                {user.email && (
+                  <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
+                )}
+                <span className="mt-1.5 inline-block rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-600 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-400">
+                  Pro
+                </span>
+              </div>
+            )}
+            <ul className="py-1">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => { onShare(); setOpen(false) }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <Users className="size-4 text-slate-400" />
+                  Colaboradores
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => { onDemo(); setOpen(false) }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <Link2 className="size-4 text-slate-400" />
+                  Enlace demo
+                </button>
+              </li>
+              {user?.role === 'super' && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => { onAdmin(); setOpen(false) }}
+                    className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                  >
+                    <Shield className="size-4 text-amber-400" />
+                    Crear usuario
+                  </button>
+                </li>
+              )}
+            </ul>
+            <div className="border-t border-slate-100 py-1 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => { onLogout(); setOpen(false) }}
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+              >
+                <LogOut className="size-4" />
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -100,23 +326,38 @@ function WorkspaceShell() {
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [diagramId, setDiagramId] = useState<string | null>(null)
-  const [diagrams, setDiagrams] = useState<{ id: string; title: string }[]>([])
+  const [diagrams, setDiagrams] = useState<DiagramEntry[]>([])
   const [diagramServerVersion, setDiagramServerVersion] = useState<number | null>(null)
+  const [saveSignal, setSaveSignal] = useState(0)
+
   const [renameOpen, setRenameOpen] = useState(false)
   const [renameTitle, setRenameTitle] = useState('')
   const [renameBusy, setRenameBusy] = useState(false)
+
   const [newDiagramOpen, setNewDiagramOpen] = useState(false)
   const [newDiagramTitle, setNewDiagramTitle] = useState('Nuevo diagrama')
   const [newDiagramBusy, setNewDiagramBusy] = useState(false)
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+
   const [adminOpen, setAdminOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [demoOpen, setDemoOpen] = useState(false)
+
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserPass, setNewUserPass] = useState('')
   const [newUserName, setNewUserName] = useState('')
+
   const [shareEmail, setShareEmail] = useState('')
+  const [shareRole, setShareRole] = useState<'editor' | 'viewer'>('editor')
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([])
+  const [collaboratorsLoading, setCollaboratorsLoading] = useState(false)
+
   const [demoDays, setDemoDays] = useState(30)
   const [demoUrl, setDemoUrl] = useState<string | null>(null)
+  const [demoCopied, setDemoCopied] = useState(false)
+
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('theme')
@@ -167,7 +408,7 @@ function WorkspaceShell() {
     async function loadDiagrams() {
       const res = await fetch('/api/diagrams', { credentials: 'include' })
       if (!res.ok || cancelled) return
-      const data = (await res.json()) as { diagrams: { id: string; title: string }[] }
+      const data = (await res.json()) as { diagrams: DiagramEntry[] }
       const list = data.diagrams ?? []
       setDiagrams(list)
       if (list.length === 0) {
@@ -180,21 +421,31 @@ function WorkspaceShell() {
         if (cr.ok && !cancelled) {
           const created = (await cr.json()) as { id: string }
           setDiagramId(created.id)
-          setDiagrams([{ id: created.id, title: 'Mi diagrama' }])
+          setDiagrams([{ id: created.id, title: 'Mi diagrama', myRole: 'owner' }])
         }
       } else if (!cancelled) {
         setDiagramId((prev) => prev ?? list[0].id)
       }
     }
     void loadDiagrams()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
     setDiagramServerVersion(null)
   }, [diagramId])
+
+  useEffect(() => {
+    if (!shareOpen || !diagramId) return
+    setCollaboratorsLoading(true)
+    fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/access`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data: { owner: unknown; collaborators: Collaborator[] }) => {
+        setCollaborators(data.collaborators ?? [])
+      })
+      .catch(() => {})
+      .finally(() => setCollaboratorsLoading(false))
+  }, [shareOpen, diagramId])
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
@@ -232,7 +483,7 @@ function WorkspaceShell() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: shareEmail.trim(), role: 'editor' }),
+      body: JSON.stringify({ email: shareEmail.trim(), role: shareRole }),
     })
     const data = (await res.json()) as { error?: string }
     if (!res.ok) {
@@ -241,7 +492,24 @@ function WorkspaceShell() {
     }
     showToast('Colaborador añadido (debe estar registrado)')
     setShareEmail('')
-    setShareOpen(false)
+    setShareRole('editor')
+    const refetch = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/access`, { credentials: 'include' })
+    if (refetch.ok) {
+      const d = (await refetch.json()) as { collaborators: Collaborator[] }
+      setCollaborators(d.collaborators ?? [])
+    }
+  }
+
+  const revokeCollaborator = async (userId: string) => {
+    if (!diagramId) return
+    const res = await fetch(
+      `/api/diagrams/${encodeURIComponent(diagramId)}/access/${encodeURIComponent(userId)}`,
+      { method: 'DELETE', credentials: 'include' },
+    )
+    if (res.ok) {
+      setCollaborators((prev) => prev.filter((c) => c.id !== userId))
+      showToast('Acceso revocado')
+    }
   }
 
   const submitRenameDiagram = async (e: React.FormEvent) => {
@@ -267,16 +535,14 @@ function WorkspaceShell() {
       const data = (await res.json()) as { error?: string; version?: number; title?: string; currentVersion?: number }
       if (res.status === 409) {
         const cur = data.currentVersion
-        if (typeof cur === 'number') {
-          setDiagramServerVersion(cur)
-        }
+        if (typeof cur === 'number') setDiagramServerVersion(cur)
         const r2 = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}`, { credentials: 'include' })
         if (r2.ok) {
           const j = (await r2.json()) as { title: string; version: number }
           setDiagramServerVersion(j.version)
           setRenameTitle(j.title)
         }
-        showToast('Otro cambio llegó antes; título y versión sincronizados. Vuelve a guardar el nombre si hace falta.')
+        showToast('Conflicto sincronizado. Vuelve a guardar si hace falta.')
         return
       }
       if (!res.ok || data.version == null) {
@@ -308,13 +574,54 @@ function WorkspaceShell() {
         showToast(data.error ?? 'No se pudo crear el diagrama')
         return
       }
-      setDiagrams((prev) => [{ id: data.id!, title: data.title ?? title }, ...prev])
+      setDiagrams((prev) => [{ id: data.id!, title: data.title ?? title, myRole: 'owner' }, ...prev])
       setDiagramId(data.id)
       setNewDiagramOpen(false)
       setNewDiagramTitle('Nuevo diagrama')
       showToast('Diagrama creado')
     } finally {
       setNewDiagramBusy(false)
+    }
+  }
+
+  const duplicateDiagram = async (id: string) => {
+    const res = await fetch(`/api/diagrams/${encodeURIComponent(id)}/duplicate`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+    const data = (await res.json()) as { error?: string; id?: string; title?: string }
+    if (!res.ok || !data.id) {
+      showToast(data.error ?? 'No se pudo duplicar el diagrama')
+      return
+    }
+    setDiagrams((prev) => [{ id: data.id!, title: data.title!, myRole: 'owner' }, ...prev])
+    setDiagramId(data.id)
+    showToast('Diagrama duplicado')
+  }
+
+  const deleteDiagram = async (id: string) => {
+    setDeleteBusy(true)
+    try {
+      const res = await fetch(`/api/diagrams/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      const data = (await res.json()) as { error?: string }
+      if (!res.ok) {
+        showToast(data.error ?? 'No se pudo eliminar')
+        return
+      }
+      setDiagrams((prev) => {
+        const next = prev.filter((d) => d.id !== id)
+        if (diagramId === id) {
+          setDiagramId(next[0]?.id ?? null)
+        }
+        return next
+      })
+      setDeleteConfirmId(null)
+      showToast('Diagrama eliminado')
+    } finally {
+      setDeleteBusy(false)
     }
   }
 
@@ -334,121 +641,83 @@ function WorkspaceShell() {
     }
     const url = `${window.location.origin}/demo/${data.token}`
     setDemoUrl(url)
-    showToast('Enlace demo generado')
+    try {
+      await navigator.clipboard.writeText(url)
+      setDemoCopied(true)
+      setTimeout(() => setDemoCopied(false), 2500)
+      showToast('Enlace demo generado y copiado')
+    } catch {
+      showToast('Enlace demo generado')
+    }
   }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
-        showToast('Guardado automático en el servidor')
+        setSaveSignal((s) => s + 1)
+        showToast('Guardando…')
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [showToast])
 
+  const currentDiagram = diagrams.find((d) => d.id === diagramId)
+  const isReadOnly = currentDiagram?.myRole === 'viewer'
+
   return (
     <div className="flex min-h-full flex-col bg-[var(--studio-bg)] text-[var(--text-primary)]">
-      <header
-        className={cn(
-          'header-pro flex shrink-0 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6',
-        )}
-      >
+      <header className="header-pro flex shrink-0 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <BowtieMark className="size-[1.65rem]" />
           </div>
-          <div className="min-w-0">
+          <div className="hidden min-w-0 sm:block">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <h1 className="text-[17px] font-bold tracking-tight text-slate-800 dark:text-slate-100">Bowtie Studio</h1>
               <span className="rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-600 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-400">
                 Pro
               </span>
             </div>
-            <p className="mt-0.5 max-w-[46ch] text-sm leading-snug text-slate-500 dark:text-slate-400">
-              Modelado de barreras y diagramas bowtie para HSE y procesos críticos
-            </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <ThemeToggle isDark={isDark} onToggle={() => setIsDark(!isDark)} />
+
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 px-2">
+          {diagrams.length > 0 && (
+            <DiagramPicker
+              diagrams={diagrams}
+              diagramId={diagramId}
+              onSelect={(id) => setDiagramId(id)}
+              onRenameClick={(id, title) => {
+                setDiagramId(id)
+                setRenameTitle(title)
+                setRenameOpen(true)
+              }}
+              onDuplicate={(id) => void duplicateDiagram(id)}
+              onDeleteClick={(id) => setDeleteConfirmId(id)}
+              onNew={() => {
+                setNewDiagramTitle('Nuevo diagrama')
+                setNewDiagramOpen(true)
+              }}
+            />
+          )}
           {savedAt && (
-            <span className="hidden text-xs font-medium text-slate-400 sm:inline dark:text-slate-500" title="Último guardado en el servidor">
-              Guardado{' '}
-              {savedAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            <span className="hidden text-xs font-medium text-slate-400 sm:inline dark:text-slate-500" title="Último guardado">
+              Guardado {savedAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           )}
-          {diagrams.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={diagramId ?? ''}
-                onChange={(e) => setDiagramId(e.target.value || null)}
-                className="max-w-[min(220px,45vw)] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-                aria-label="Seleccionar diagrama"
-              >
-                {diagrams.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.title}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => {
-                  const t = diagrams.find((d) => d.id === diagramId)?.title ?? ''
-                  setRenameTitle(t)
-                  setRenameOpen(true)
-                }}
-                className="pro-button inline-flex items-center gap-1.5 px-2.5 py-2"
-                aria-label="Renombrar diagrama"
-                title="Renombrar diagrama"
-              >
-                <Pencil className="size-4 shrink-0 opacity-80" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setNewDiagramTitle('Nuevo diagrama')
-                  setNewDiagramOpen(true)
-                }}
-                className="pro-button inline-flex items-center gap-1.5 border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400"
-              >
-                <Plus className="size-4 shrink-0" />
-                Nuevo
-              </button>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => setShareOpen(true)}
-            className="pro-button"
-          >
-            Colaborar
-          </button>
-          <button
-            type="button"
-            onClick={() => setDemoOpen(true)}
-            className="pro-button"
-          >
-            Demo
-          </button>
-          {user?.role === 'super' && (
-            <button
-              type="button"
-              onClick={() => setAdminOpen(true)}
-              className="pro-button border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-300"
-            >
-              Crear usuario
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="pro-button border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-400"
-          >
-            Salir
-          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <ThemeToggle isDark={isDark} onToggle={() => setIsDark(!isDark)} />
+          <UserMenu
+            user={user}
+            onLogout={() => void logout()}
+            onShare={() => setShareOpen(true)}
+            onDemo={() => { setDemoUrl(null); setDemoCopied(false); setDemoOpen(true) }}
+            onAdmin={() => setAdminOpen(true)}
+          />
         </div>
       </header>
 
@@ -465,6 +734,8 @@ function WorkspaceShell() {
               remoteDiagramId={diagramId}
               onDiagramVersionChange={setDiagramServerVersion}
               serverVersionHint={diagramServerVersion}
+              saveSignal={saveSignal}
+              readOnly={isReadOnly}
             />
           </ReactFlowProvider>
         )}
@@ -554,6 +825,50 @@ function WorkspaceShell() {
         </div>
       )}
 
+      {deleteConfirmId && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => !deleteBusy && setDeleteConfirmId(null)}
+        >
+          <div className="pro-panel w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/50">
+                <Trash2 className="size-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Eliminar diagrama</h2>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  &quot;{diagrams.find((d) => d.id === deleteConfirmId)?.title}&quot;
+                </p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+              Esta acción es permanente y no se puede deshacer.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={deleteBusy}
+                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 disabled:opacity-50 dark:text-slate-400"
+                onClick={() => setDeleteConfirmId(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={deleteBusy}
+                className="rounded-xl border border-rose-500 bg-rose-500 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-rose-600 disabled:opacity-60"
+                onClick={() => void deleteDiagram(deleteConfirmId)}
+              >
+                {deleteBusy ? 'Eliminando…' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {adminOpen && (
         <div
           className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
@@ -607,26 +922,107 @@ function WorkspaceShell() {
           onClick={() => setShareOpen(false)}
         >
           <div className="pro-panel relative z-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Invitar colaborador</h2>
-            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">El usuario debe existir (email registrado). Podrá editar este diagrama.</p>
-            <form className="mt-5 space-y-4" onSubmit={shareDiagram}>
-              <input
-                type="email"
-                required
-                placeholder="Email del colaborador"
-                value={shareEmail}
-                onChange={(e) => setShareEmail(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
-              />
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" onClick={() => setShareOpen(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="pro-button-primary">
-                  Invitar
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Colaboradores</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              Gestiona el acceso al diagrama actual.
+            </p>
+
+            {collaboratorsLoading ? (
+              <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+                <Loader2 className="size-4 animate-spin" />
+                Cargando…
+              </div>
+            ) : collaborators.length > 0 ? (
+              <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
+                {collaborators.map((c) => (
+                  <li key={c.id} className="flex items-center gap-3 px-4 py-2.5">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                      {c.name?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{c.name}</p>
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">{c.email}</p>
+                    </div>
+                    <span className={cn(
+                      'rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                      c.role === 'editor' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+                    )}>
+                      {c.role}
+                    </span>
+                    {currentDiagram?.myRole === 'owner' && (
+                      <button
+                        type="button"
+                        title="Revocar acceso"
+                        onClick={() => void revokeCollaborator(c.id)}
+                        className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Sin colaboradores aún.</p>
+            )}
+
+            {currentDiagram?.myRole === 'owner' && (
+              <form className="mt-5 space-y-3" onSubmit={shareDiagram}>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Invitar</p>
+                <input
+                  type="email"
+                  required
+                  placeholder="Email del colaborador"
+                  value={shareEmail}
+                  onChange={(e) => setShareEmail(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
+                />
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">Rol:</label>
+                  <div className="flex gap-2">
+                    {(['editor', 'viewer'] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setShareRole(r)}
+                        className={cn(
+                          'rounded-lg border px-3 py-1.5 text-xs font-bold capitalize transition-all',
+                          shareRole === r
+                            ? 'border-sky-500 bg-sky-500 text-white'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                        )}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end gap-3 pt-1">
+                  <button
+                    type="button"
+                    className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    onClick={() => setShareOpen(false)}
+                  >
+                    Cerrar
+                  </button>
+                  <button type="submit" className="pro-button-primary">
+                    Invitar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {currentDiagram?.myRole !== 'owner' && (
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                  onClick={() => setShareOpen(false)}
+                >
+                  Cerrar
                 </button>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}
@@ -634,49 +1030,56 @@ function WorkspaceShell() {
       {demoOpen && (
         <div
           className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
-          onClick={() => {
-            setDemoOpen(false)
-            setDemoUrl(null)
-          }}
+          onClick={() => { setDemoOpen(false); setDemoUrl(null); setDemoCopied(false) }}
         >
           <div className="pro-panel relative z-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Enlace demo (solo lectura)</h2>
-            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Copia el enlace para compartir una vista fija del diagrama actual.</p>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              Genera un enlace temporal de solo lectura para compartir el diagrama actual.
+            </p>
             <form className="mt-5 space-y-4" onSubmit={createDemoLink}>
-              <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">Caduca en (días)</label>
-              <input
-                type="number"
-                min={1}
-                max={90}
-                value={demoDays}
-                onChange={(e) => setDemoDays(Number(e.target.value) || 30)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
-              />
+              <div>
+                <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">Caduca en (días)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={demoDays}
+                  onChange={(e) => setDemoDays(Number(e.target.value) || 30)}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
+                />
+              </div>
               {demoUrl && (
-                <div className="break-all rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-sky-600 dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">{demoUrl}</div>
+                <div className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
+                  <p className="min-w-0 flex-1 break-all text-sm font-medium text-sky-600 dark:text-sky-400">{demoUrl}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(demoUrl)
+                      setDemoCopied(true)
+                      setTimeout(() => setDemoCopied(false), 2500)
+                    }}
+                    className="shrink-0 rounded-lg border border-slate-200 bg-white p-1.5 transition-colors hover:border-slate-300 dark:border-slate-600 dark:bg-slate-700"
+                    title="Copiar enlace"
+                  >
+                    {demoCopied ? (
+                      <Check className="size-4 text-emerald-500" />
+                    ) : (
+                      <Copy className="size-4 text-slate-400" />
+                    )}
+                  </button>
+                </div>
               )}
-              <div className="flex flex-wrap justify-end gap-3 pt-2">
+              <div className="flex flex-wrap justify-end gap-3 pt-1">
                 <button
                   type="button"
                   className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                  onClick={() => {
-                    setDemoOpen(false)
-                    setDemoUrl(null)
-                  }}
+                  onClick={() => { setDemoOpen(false); setDemoUrl(null); setDemoCopied(false) }}
                 >
                   Cerrar
                 </button>
-                {demoUrl && (
-                  <button
-                    type="button"
-                    className="pro-button"
-                    onClick={() => void navigator.clipboard.writeText(demoUrl)}
-                  >
-                    Copiar enlace
-                  </button>
-                )}
                 <button type="submit" className="pro-button-primary">
-                  Generar
+                  {demoUrl ? 'Regenerar' : 'Generar y copiar'}
                 </button>
               </div>
             </form>

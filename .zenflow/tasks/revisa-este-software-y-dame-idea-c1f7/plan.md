@@ -1,30 +1,42 @@
-# Auto
+# Bowtie Studio Pro — Mejoras estéticas y funcionales
 
-## Configuration
-- **Artifacts Path**: {@artifacts_path} → `.zenflow/tasks/{task_id}`
+## Implementación completa de 18 mejoras
 
-## Agent Instructions
+### [x] Step 1: Shared BowtieMark component
+- Created `src/components/BowtieMark.tsx` using `useId()` for unique SVG filter/gradient IDs
+- Updated `src/App.tsx` to import from shared component
+- Updated `src/pages/LoginPage.tsx` to import from shared component (eliminates duplicate ID conflicts)
 
-Ask the user questions when anything is unclear or needs their input. This includes:
-- Ambiguous or incomplete requirements
-- Technical decisions that affect architecture or user experience
-- Trade-offs that require business context
+### [x] Step 2: New backend endpoints (src/api/diagrams.ts)
+- `DELETE /:id` — delete diagram (owner or super only), cascades to diagram_access
+- `POST /:id/duplicate` — duplicate diagram with "(copia)" suffix
+- `DELETE /:id/access/:userId` — revoke collaborator access
 
-Do not make assumptions on important decisions — get clarification first.
+### [x] Step 3: Additional HSE templates (src/lib/template.ts)
+- Added `TemplateDefinition` type and `TEMPLATES` array
+- 4 templates: Incendio/Explosión, Derrame Químico, Fallo de Equipo Mecánico, Accidente de Tránsito
 
-**Debug requests, questions, and investigations:** answer or investigate first. Do not create a plan upfront — the user needs an answer, not a plan. A plan may become relevant later once the investigation reveals what needs to change.
+### [x] Step 4: FlowWorkspace improvements (src/components/FlowWorkspace.tsx)
+- `DiagramSkeleton` shimmer animation (replaces plain "Cargando…" text)
+- Canvas `animate-fade-in` on load completion
+- Insights panel starts closed (`insightsOpen` default `false`)
+- Fullscreen toggle button (Maximize2/Minimize2) with `fullscreenchange` listener
+- `TemplateMenu` dropdown with all 4 templates (replaces single Plantilla button)
+- JSON import schema validation against `VALID_NODE_TYPES`
+- `saveSignal` prop — increments trigger immediate `doSave()` call
+- Stats panel redesigned: color-coded chip grid instead of text abbreviations
 
-**For all other tasks**, before writing any code, assess the scope of the actual change (not the prompt length — a one-sentence prompt can describe a large feature). Scale your approach:
+### [x] Step 5: App.tsx overhaul
+- `DiagramPicker` custom dropdown: search input, per-row rename/duplicate/delete actions, role badge
+- `UserMenu` avatar dropdown: profile info, Colaboradores, Enlace demo, Crear usuario, Cerrar sesión
+- Delete diagram with confirmation modal (rose-themed)
+- Duplicate diagram via `POST /api/diagrams/:id/duplicate`
+- Fixed `Ctrl+S`: increments `saveSignal` → real save (was misleading toast)
+- Collaboration modal: shows collaborator list with revoke (X) button, editor/viewer role toggle
+- Demo modal: "Generar y copiar" button, auto-clipboard copy, Check icon feedback
+- `isReadOnly` derived from `myRole === 'viewer'` → passes `readOnly` to FlowWorkspace
+- Header simplified: [Logo+Name] | [DiagramPicker+SavedAt] | [ThemeToggle+UserMenu]
 
-- **Trivial** (typo, config tweak, single obvious change): implement directly, no plan needed.
-- **Small** (a few files, clear what to do): write 2–3 sentences in `plan.md` describing what and why, then implement. No substeps.
-- **Medium** (multiple components, design decisions, edge cases): write a plan in `plan.md` with requirements, affected files, key decisions, verification. Break into 3–5 steps.
-- **Large** (new feature, cross-cutting, unclear scope): gather requirements and write a technical spec first (`requirements.md`, `spec.md` in `{@artifacts_path}/`). Then write `plan.md` with concrete steps referencing the spec.
-
-**Skip planning and implement directly when** the task is trivial, or the user explicitly asks to "just do it" / gives a clear direct instruction.
-
-To reflect the actual purpose of the first step, you can rename it to something more relevant (e.g., Planning, Investigation). Do NOT remove meta information like comments for any step.
-
-Rule of thumb for step size: each step = a coherent unit of work (component, endpoint, test suite). Not too granular (single function), not too broad (entire feature). Unit tests are part of each step, not separate.
-
-Update `{@artifacts_path}/plan.md` if it makes sense to have a plan and task has more than 1 big step.
+### [x] Step 6: CSS & final polish (src/client.css + src/pages/LoginPage.tsx)
+- Added `@keyframes fadeIn` + `.animate-fade-in` for canvas fade-in
+- LoginPage updated to use shared BowtieMark (no more duplicate SVG filter IDs)

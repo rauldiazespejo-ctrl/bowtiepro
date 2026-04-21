@@ -1,34 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BowtieMark } from '../components/BowtieMark'
 import { cn } from '../lib/cn'
-
-function BowtieMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={cn('shrink-0', className)} aria-hidden>
-      <defs>
-        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0ea5e9" />
-          <stop offset="50%" stopColor="#06b6d4" />
-          <stop offset="100%" stopColor="#14b8a6" />
-        </linearGradient>
-        <linearGradient id="logoGradInner" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#22d3ee" />
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <path fill="url(#logoGrad)" filter="url(#glow)" d="M24 4 4 24 24 44 44 24 24 4z" opacity="0.95" />
-      <path fill="url(#logoGradInner)" d="M24 12 12 24 24 36 36 24 24 12z" />
-      <circle fill="#0ea5e9" cx="24" cy="24" r="3" filter="url(#glow)" />
-    </svg>
-  )
-}
 
 export function LoginPage() {
   const nav = useNavigate()

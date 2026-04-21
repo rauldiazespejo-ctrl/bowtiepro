@@ -28,6 +28,8 @@ import {
   FileDown,
   HelpCircle,
   LayoutGrid,
+  Maximize2,
+  Minimize2,
   Plus,
   Redo2,
   Sparkles,
@@ -47,11 +49,19 @@ import {
 import { ShortcutsModal } from './ShortcutsModal'
 import { layoutBowtie } from '../lib/layout'
 import { loadDiagram, saveDiagram } from '../lib/storage'
-import { createDefaultTemplate, expandWithAdditionalPath } from '../lib/template'
+import { TEMPLATES, expandWithAdditionalPath } from '../lib/template'
 import { createStudioNode, type StudioNodeType } from '../lib/nodeFactory'
 import { validateDiagram, type DiagramValidation } from '../lib/validateDiagram'
 import { useDiagramHistory } from '../hooks/useDiagramHistory'
 import { cn } from '../lib/cn'
+
+const VALID_NODE_TYPES = new Set([
+  'hazard',
+  'barrierPreventive',
+  'topEvent',
+  'barrierMitigative',
+  'consequence',
+])
 
 const nodeTypes = {
   hazard: HazardNode,
@@ -77,6 +87,33 @@ function ToolbarSep() {
 }
 
 type SessionUser = { name: string; role: string }
+
+function DiagramSkeleton() {
+  const bar = 'animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700/60'
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-[var(--studio-canvas)]">
+      <div className="flex items-center gap-5 opacity-70">
+        <div className="flex flex-col gap-3">
+          <div className={cn(bar, 'h-14 w-40')} />
+          <div className={cn(bar, 'h-14 w-40')} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className={cn(bar, 'h-14 w-36')} />
+          <div className={cn(bar, 'h-14 w-36')} />
+        </div>
+        <div className={cn(bar, 'h-20 w-44')} />
+        <div className="flex flex-col gap-3">
+          <div className={cn(bar, 'h-14 w-36')} />
+          <div className={cn(bar, 'h-14 w-36')} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className={cn(bar, 'h-14 w-40')} />
+          <div className={cn(bar, 'h-14 w-40')} />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
   const [open, setOpen] = useState(false)
@@ -122,6 +159,52 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
                   }}
                 >
                   {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  )
+}
+
+function TemplateMenu({ onLoad }: { onLoad: (templateId: string) => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={toolBtn}
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        <Sparkles className="size-4 text-slate-500 dark:text-slate-400" />
+        Plantilla
+        <ChevronDown className={cn('size-3.5 transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 cursor-default"
+            aria-label="Cerrar menú"
+            onClick={() => setOpen(false)}
+          />
+          <ul className="absolute left-0 top-full z-50 mt-2 min-w-[240px] rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            {TEMPLATES.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  className="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  onClick={() => {
+                    onLoad(t.id)
+                    setOpen(false)
+                  }}
+                >
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t.name}</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{t.description}</p>
                 </button>
               </li>
             ))}
@@ -227,6 +310,8 @@ function FlowToolbarInner({
   onOpenShortcuts,
   validation,
   readOnly = false,
+  isFullscreen,
+  onToggleFullscreen,
 }: {
   user: SessionUser | null
   onToast: (msg: string) => void
@@ -242,6 +327,8 @@ function FlowToolbarInner({
   onOpenShortcuts: () => void
   validation: DiagramValidation
   readOnly?: boolean
+  isFullscreen: boolean
+  onToggleFullscreen: () => void
 }) {
   const { screenToFlowPosition } = useReactFlow()
 
@@ -251,13 +338,18 @@ function FlowToolbarInner({
     onToast('Diagrama reorganizado')
   }, [setNodes, onToast, takeSnapshot])
 
-  const resetTemplate = useCallback(() => {
-    takeSnapshot()
-    const t = createDefaultTemplate()
-    setNodes(layoutBowtie(t.nodes))
-    setEdges(t.edges)
-    onToast('Plantilla base cargada')
-  }, [setNodes, setEdges, onToast, takeSnapshot])
+  const loadTemplate = useCallback(
+    (templateId: string) => {
+      const tpl = TEMPLATES.find((t) => t.id === templateId)
+      if (!tpl) return
+      takeSnapshot()
+      const { nodes: tNodes, edges: tEdges } = tpl.create()
+      setNodes(layoutBowtie(tNodes))
+      setEdges(tEdges)
+      onToast(`Plantilla "${tpl.name}" cargada`)
+    },
+    [setNodes, setEdges, onToast, takeSnapshot],
+  )
 
   const expandPath = useCallback(() => {
     const eventNode = nodes.find((n) => n.type === 'topEvent')
@@ -295,7 +387,14 @@ function FlowToolbarInner({
         .text()
         .then((text) => {
           const data = JSON.parse(text) as { nodes: Node[]; edges: Edge[] }
-          if (!Array.isArray(data.nodes) || !Array.isArray(data.edges)) throw new Error('Formato inválido')
+          if (!Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+            throw new Error('Formato inválido')
+          }
+          const invalidNodes = data.nodes.filter((n) => !VALID_NODE_TYPES.has(String(n.type ?? '')))
+          if (invalidNodes.length > 0) {
+            onToast(`Tipos de nodo desconocidos: ${invalidNodes.map((n) => n.type).join(', ')}`)
+            return
+          }
           takeSnapshot()
           setNodes(layoutBowtie(data.nodes))
           setEdges(data.edges)
@@ -347,66 +446,76 @@ function FlowToolbarInner({
     <>
       <Panel position="top-left" className="m-3">
         <div className="toolbar-pro">
-        <AddNodeMenu onAdd={addNode} />
-        <ToolbarSep />
-        <button
-          type="button"
-          disabled={!canUndo}
-          onClick={() => (undo() ? onToast('Deshecho') : null)}
-          className={toolBtn}
-          aria-label="Deshacer"
-        >
-          <Undo2 className="size-4 text-slate-500 dark:text-slate-400" />
-          Deshacer
-        </button>
-        <button
-          type="button"
-          disabled={!canRedo}
-          onClick={() => (redo() ? onToast('Rehecho') : null)}
-          className={toolBtn}
-          aria-label="Rehacer"
-        >
-          <Redo2 className="size-4 text-slate-500 dark:text-slate-400" />
-          Rehacer
-        </button>
-        <ToolbarSep />
-        <button
-          type="button"
-          onClick={applyLayout}
-          className={toolBtn}
-        >
-          <LayoutGrid className="size-4 text-slate-500 dark:text-slate-400" />
-          Organizar
-        </button>
-        <button type="button" onClick={resetTemplate} className={toolBtn}>
-          <Sparkles className="size-4 text-slate-500 dark:text-slate-400" />
-          Plantilla
-        </button>
-        <button type="button" onClick={expandPath} className={toolBtn}>
-          <Wand2 className="size-4 text-slate-500 dark:text-slate-400" />
-          Camino
-        </button>
-        <ToolbarSep />
-        <ExportPngControl onToast={onToast} />
-        <ExportPdfControl onToast={onToast} validation={validation} />
-        <button type="button" onClick={exportJson} className={toolBtn}>
-          <Download className="size-4 text-slate-500 dark:text-slate-400" />
-          JSON
-        </button>
-        <button type="button" onClick={importJson} className={toolBtn}>
-          <Upload className="size-4 text-slate-400 dark:text-slate-300" />
-          Importar
-        </button>
-        <ToolbarSep />
-        <button
-          type="button"
-          onClick={onOpenShortcuts}
-          className={toolBtn}
-          aria-label="Ver atajos de teclado"
-        >
-          <HelpCircle className="size-4 text-slate-500 dark:text-slate-400" />
-          Ayuda
-        </button>
+          <AddNodeMenu onAdd={addNode} />
+          <ToolbarSep />
+          <button
+            type="button"
+            disabled={!canUndo}
+            onClick={() => (undo() ? onToast('Deshecho') : null)}
+            className={toolBtn}
+            aria-label="Deshacer"
+          >
+            <Undo2 className="size-4 text-slate-500 dark:text-slate-400" />
+            Deshacer
+          </button>
+          <button
+            type="button"
+            disabled={!canRedo}
+            onClick={() => (redo() ? onToast('Rehecho') : null)}
+            className={toolBtn}
+            aria-label="Rehacer"
+          >
+            <Redo2 className="size-4 text-slate-500 dark:text-slate-400" />
+            Rehacer
+          </button>
+          <ToolbarSep />
+          <button
+            type="button"
+            onClick={applyLayout}
+            className={toolBtn}
+          >
+            <LayoutGrid className="size-4 text-slate-500 dark:text-slate-400" />
+            Organizar
+          </button>
+          <TemplateMenu onLoad={loadTemplate} />
+          <button type="button" onClick={expandPath} className={toolBtn}>
+            <Wand2 className="size-4 text-slate-500 dark:text-slate-400" />
+            Camino
+          </button>
+          <ToolbarSep />
+          <ExportPngControl onToast={onToast} />
+          <ExportPdfControl onToast={onToast} validation={validation} />
+          <button type="button" onClick={exportJson} className={toolBtn}>
+            <Download className="size-4 text-slate-500 dark:text-slate-400" />
+            JSON
+          </button>
+          <button type="button" onClick={importJson} className={toolBtn}>
+            <Upload className="size-4 text-slate-400 dark:text-slate-300" />
+            Importar
+          </button>
+          <ToolbarSep />
+          <button
+            type="button"
+            onClick={onOpenShortcuts}
+            className={toolBtn}
+            aria-label="Ver atajos de teclado"
+          >
+            <HelpCircle className="size-4 text-slate-500 dark:text-slate-400" />
+            Ayuda
+          </button>
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            className={toolBtn}
+            aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="size-4 text-slate-500 dark:text-slate-400" />
+            ) : (
+              <Maximize2 className="size-4 text-slate-500 dark:text-slate-400" />
+            )}
+          </button>
         </div>
       </Panel>
 
@@ -445,6 +554,7 @@ export function FlowWorkspace({
   readOnly = false,
   onDiagramVersionChange,
   serverVersionHint = null,
+  saveSignal = 0,
 }: {
   user: SessionUser | null
   onToast: (msg: string) => void
@@ -452,15 +562,12 @@ export function FlowWorkspace({
   setSavedAt: (d: Date | null) => void
   shortcutsOpen: boolean
   setShortcutsOpen: (v: boolean) => void
-  /** Guardar en servidor (por usuario). */
   remoteDiagramId?: string | null
-  /** Cargar snapshot demo público. */
   demoToken?: string | null
   readOnly?: boolean
-  /** Versión del diagrama en servidor (carga, guardado, sincronización). */
   onDiagramVersionChange?: (version: number) => void
-  /** Tras renombrar u otras acciones en el padre, alinear la versión optimista. */
   serverVersionHint?: number | null
+  saveSignal?: number
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[])
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[])
@@ -469,12 +576,34 @@ export function FlowWorkspace({
   const onVersionParentRef = useRef(onDiagramVersionChange)
   onVersionParentRef.current = onDiagramVersionChange
 
+  const nodesRef = useRef(nodes)
+  const edgesRef = useRef(edges)
+  useEffect(() => {
+    nodesRef.current = nodes
+    edgesRef.current = edges
+  })
+
   const assignVersion = useCallback((v: number) => {
     versionRef.current = v
     onVersionParentRef.current?.(v)
   }, [])
-  const [insightsOpen, setInsightsOpen] = useState(true)
+  const [insightsOpen, setInsightsOpen] = useState(false)
   const [selected, setSelected] = useState<OnSelectionChangeParams>({ nodes: [], edges: [] })
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {})
+    } else {
+      document.exitFullscreen().catch(() => {})
+    }
+  }, [])
 
   const { takeSnapshot, undo, redo, canUndo, canRedo } = useDiagramHistory(nodes, edges, setNodes, setEdges)
 
@@ -485,7 +614,7 @@ export function FlowWorkspace({
         const res = await fetch(`/api/public/demo/${encodeURIComponent(demoToken)}`)
         if (!res.ok) {
           onToast(res.status === 410 ? 'El enlace demo ha caducado' : 'No se pudo cargar la demo')
-          const t = createDefaultTemplate()
+          const t = TEMPLATES[0].create()
           if (!cancelled) {
             setNodes(layoutBowtie(t.nodes))
             setEdges(t.edges)
@@ -507,7 +636,7 @@ export function FlowWorkspace({
         })
         if (!res.ok) {
           onToast('No se pudo cargar el diagrama del servidor')
-          const tpl = createDefaultTemplate()
+          const tpl = TEMPLATES[0].create()
           if (!cancelled) {
             setNodes(layoutBowtie(tpl.nodes))
             setEdges(tpl.edges)
@@ -534,7 +663,7 @@ export function FlowWorkspace({
         }
         return
       }
-      const t = createDefaultTemplate()
+      const t = TEMPLATES[0].create()
       if (!cancelled) {
         setNodes(layoutBowtie(t.nodes))
         setEdges(t.edges)
@@ -554,53 +683,63 @@ export function FlowWorkspace({
     }
   }, [serverVersionHint])
 
-  useEffect(() => {
-    if (!canvasReady) return
-    if (demoToken || readOnly) return
+  const doSave = useCallback(async () => {
+    if (!canvasReady || demoToken || readOnly) return
+    const currentNodes = nodesRef.current
+    const currentEdges = edgesRef.current
     if (!remoteDiagramId) {
-      const t = setTimeout(() => {
-        saveDiagram(nodes, edges)
-        setSavedAt(new Date())
-      }, 900)
-      return () => clearTimeout(t)
+      saveDiagram(currentNodes, currentEdges)
+      setSavedAt(new Date())
+      return
     }
-    const t = setTimeout(() => {
-      void (async () => {
-        try {
-          const res = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
-            method: 'PUT',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              nodes,
-              edges,
-              version: versionRef.current,
-            }),
-          })
-          if (res.status === 409) {
-            const r2 = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
-              credentials: 'include',
-            })
-            if (r2.ok) {
-              const j = (await r2.json()) as { nodes: Node[]; edges: Edge[]; version: number }
-              assignVersion(j.version)
-              setNodes(layoutBowtie(j.nodes))
-              setEdges(j.edges)
-              onToast('Otro colaborador editó el diagrama; se sincronizó')
-            }
-            return
-          }
-          if (!res.ok) return
-          const j = (await res.json()) as { version: number }
+    try {
+      const res = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nodes: currentNodes,
+          edges: currentEdges,
+          version: versionRef.current,
+        }),
+      })
+      if (res.status === 409) {
+        const r2 = await fetch(`/api/diagrams/${encodeURIComponent(remoteDiagramId)}`, {
+          credentials: 'include',
+        })
+        if (r2.ok) {
+          const j = (await r2.json()) as { nodes: Node[]; edges: Edge[]; version: number }
           assignVersion(j.version)
-          setSavedAt(new Date())
-        } catch {
-          /* ignore */
+          setNodes(layoutBowtie(j.nodes))
+          setEdges(j.edges)
+          onToast('Otro colaborador editó el diagrama; se sincronizó')
         }
-      })()
-    }, 1200)
+        return
+      }
+      if (!res.ok) return
+      const j = (await res.json()) as { version: number }
+      assignVersion(j.version)
+      setSavedAt(new Date())
+    } catch {
+      /* ignore */
+    }
+  }, [canvasReady, demoToken, readOnly, remoteDiagramId, setSavedAt, onToast, assignVersion, setNodes, setEdges])
+
+  useEffect(() => {
+    if (!canvasReady || demoToken || readOnly) return
+    const delay = remoteDiagramId ? 1200 : 900
+    const t = setTimeout(() => void doSave(), delay)
     return () => clearTimeout(t)
-  }, [nodes, edges, remoteDiagramId, demoToken, readOnly, canvasReady, setSavedAt, onToast, setEdges, setNodes, assignVersion])
+  }, [nodes, edges, canvasReady, demoToken, readOnly, remoteDiagramId, doSave])
+
+  const prevSaveSignal = useRef(0)
+  useEffect(() => {
+    if (saveSignal <= prevSaveSignal.current) return
+    prevSaveSignal.current = saveSignal
+    if (canvasReady && !demoToken && !readOnly) {
+      void doSave()
+    }
+  }, [saveSignal, canvasReady, demoToken, readOnly, doSave])
 
   useEffect(() => {
     if (!canvasReady || !remoteDiagramId || demoToken || readOnly) return
@@ -742,14 +881,14 @@ export function FlowWorkspace({
 
   if (!canvasReady) {
     return (
-      <div className="flex h-[calc(100vh-4.25rem)] w-full items-center justify-center border-t border-slate-200 bg-[var(--studio-canvas)] text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-        Cargando diagrama…
+      <div className="h-[calc(100vh-4.25rem)] w-full border-t border-slate-200 dark:border-slate-700">
+        <DiagramSkeleton />
       </div>
     )
   }
 
   return (
-    <div className="relative h-[calc(100vh-4.25rem)] w-full border-t border-slate-200 bg-[var(--studio-canvas)] dark:border-slate-700">
+    <div className="relative h-[calc(100vh-4.25rem)] w-full border-t border-slate-200 bg-[var(--studio-canvas)] dark:border-slate-700 animate-fade-in">
       <ReactFlow
         className="studio-flow"
         nodes={nodes}
@@ -794,9 +933,11 @@ export function FlowWorkspace({
           onOpenShortcuts={() => setShortcutsOpen(true)}
           validation={validation}
           readOnly={readOnly}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
         />
 
-        <Panel position="bottom-left" className="m-3 flex max-w-[min(100%-1.5rem,320px)] flex-col gap-2">
+        <Panel position="bottom-left" className="m-3 flex max-w-[min(100%-1.5rem,340px)] flex-col gap-2">
           <button
             type="button"
             onClick={() => setInsightsOpen((o) => !o)}
@@ -814,19 +955,27 @@ export function FlowWorkspace({
             >
               {validation.healthScore}
             </span>
+            <ChevronDown className={cn('size-3.5 transition-transform', insightsOpen && 'rotate-180')} />
           </button>
           {insightsOpen && (
             <div className="pro-panel p-4 text-sm">
-              <ul className="grid grid-cols-2 gap-x-3 gap-y-1 font-medium text-slate-600 dark:text-slate-400">
-                <li>Peligros: <span className="text-rose-600 dark:text-rose-400">{validation.stats.hazards}</span></li>
-                <li>Prev.: <span className="text-amber-600 dark:text-amber-400">{validation.stats.barriersPreventive}</span></li>
-                <li>Mit.: <span className="text-sky-600 dark:text-sky-400">{validation.stats.barriersMitigative}</span></li>
-                <li>Eventos: <span className="text-slate-600 dark:text-slate-400">{validation.stats.topEvents}</span></li>
-                <li>Cons.: <span className="text-emerald-600 dark:text-emerald-400">{validation.stats.consequences}</span></li>
-                <li>Aristas: <span className="text-slate-500 dark:text-slate-400">{validation.stats.edges}</span></li>
-              </ul>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Peligros', value: validation.stats.hazards, color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300' },
+                  { label: 'Barr. prev.', value: validation.stats.barriersPreventive, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
+                  { label: 'Eventos', value: validation.stats.topEvents, color: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' },
+                  { label: 'Barr. mit.', value: validation.stats.barriersMitigative, color: 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300' },
+                  { label: 'Consecuencias', value: validation.stats.consequences, color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
+                  { label: 'Conexiones', value: validation.stats.edges, color: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' },
+                ].map(({ label, value, color }) => (
+                  <div key={label} className={cn('flex flex-col items-center rounded-lg px-2 py-2', color)}>
+                    <span className="text-lg font-bold leading-none">{value}</span>
+                    <span className="mt-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide opacity-80">{label}</span>
+                  </div>
+                ))}
+              </div>
               {validation.warnings.length > 0 && (
-                <ul className="mt-3 space-y-1.5 border-t border-slate-200 pt-3 text-xs font-medium text-amber-600 dark:text-amber-400">
+                <ul className="mt-3 space-y-1.5 border-t border-slate-200 pt-3 text-xs font-medium text-amber-600 dark:border-slate-700 dark:text-amber-400">
                   {validation.warnings.map((w, i) => (
                     <li key={`${i}-${w.slice(0, 24)}`} className="flex gap-2">
                       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
@@ -835,7 +984,7 @@ export function FlowWorkspace({
                   ))}
                 </ul>
               )}
-              <p className="mt-3 border-t border-slate-200 pt-3 text-xs font-medium text-slate-400 dark:text-slate-500">
+              <p className="mt-3 border-t border-slate-200 pt-3 text-xs font-medium text-slate-400 dark:border-slate-700 dark:text-slate-500">
                 Auto-guardado{' '}
                 {savedAt
                   ? savedAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
