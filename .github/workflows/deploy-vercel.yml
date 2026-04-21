@@ -1,13 +1,13 @@
-# Requiere en GitHub → Settings → Secrets and variables → Actions:
-#   VERCEL_TOKEN       (https://vercel.com/account/tokens)
-#   VERCEL_ORG_ID      (valor de .vercel/project.json → orgId)
-#   VERCEL_PROJECT_ID  (valor de .vercel/project.json → projectId)
-
 name: Deploy production (Vercel)
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   deploy:
@@ -17,15 +17,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
           cache: npm
-          cache-dependency-path: package-lock.json
 
-      - name: Install and build
-        run: npm ci && npm run build:vercel
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Vercel
+        run: npm run build:vercel
 
       - name: Deploy to Vercel
-        run: npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx vercel deploy --prebuilt --prod --yes --token ${{ secrets.VERCEL_TOKEN }}
