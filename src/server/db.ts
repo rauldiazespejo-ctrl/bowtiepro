@@ -19,8 +19,12 @@ async function loadCreateClient(): Promise<CreateClientFn> {
   if (isRemote) {
     return createWebClient as unknown as CreateClientFn
   }
-  const m = await import('@libsql/client')
-  return m.createClient
+  try {
+    const m = await import('@libsql/client')
+    return m.createClient
+  } catch {
+    throw new DatabaseNotConfiguredError()
+  }
 }
 
 const SUPER_EMAIL = (process.env.SUPER_ADMIN_EMAIL ?? 'rauldiazespejo@gmail.com').toLowerCase()
