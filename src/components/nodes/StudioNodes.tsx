@@ -9,6 +9,12 @@ const NODE_COLORS = {
     accent: 'text-rose-600 dark:text-rose-400',
     badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300',
   },
+  cause: {
+    light: 'border-violet-500 bg-violet-50',
+    dark: 'border-violet-600 bg-violet-950/60',
+    accent: 'text-violet-600 dark:text-violet-400',
+    badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300',
+  },
   barrierPreventive: {
     light: 'border-amber-500 bg-amber-50',
     dark: 'border-amber-600 bg-amber-950/60',
@@ -127,16 +133,20 @@ export function HazardNode({ id, data }: NodeProps<{ label: string }>) {
   return <NodeShell variant="hazard" id={id} label={data.label} badge="Peligro" source className="border-l-4" />
 }
 
+export function CauseNode({ id, data }: NodeProps<{ label: string }>) {
+  return <NodeShell variant="cause" id={id} label={data.label} badge="Causa" target source className="border-l-4" />
+}
+
 export function BarrierPreventiveNode({ id, data }: NodeProps<{ label: string }>) {
-  return <NodeShell variant="barrierPreventive" id={id} label={data.label} badge="Barrera preventiva" target source className="border-l-4" />
+  return <NodeShell variant="barrierPreventive" id={id} label={data.label} badge="Control preventivo" target source className="border-l-4" />
 }
 
 export function TopEventNode({ id, data }: NodeProps<{ label: string }>) {
-  return <NodeShell variant="topEvent" id={id} label={data.label} badge="Evento superior" target source className="border-l-4" />
+  return <NodeShell variant="topEvent" id={id} label={data.label} badge="Evento Top" target source className="border-l-4" />
 }
 
 export function BarrierMitigativeNode({ id, data }: NodeProps<{ label: string }>) {
-  return <NodeShell variant="barrierMitigative" id={id} label={data.label} badge="Barrera mitigadora" target source className="border-l-4" />
+  return <NodeShell variant="barrierMitigative" id={id} label={data.label} badge="Control mitigador" target source className="border-l-4" />
 }
 
 export function ConsequenceNode({ id, data }: NodeProps<{ label: string }>) {

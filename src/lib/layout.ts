@@ -2,10 +2,11 @@ import type { Node } from '@xyflow/react'
 
 const COL = {
   hazard: 0,
-  barrierPreventive: 1,
-  topEvent: 2,
-  barrierMitigative: 3,
-  consequence: 4,
+  cause: 1,
+  barrierPreventive: 2,
+  topEvent: 3,
+  barrierMitigative: 4,
+  consequence: 5,
 } as const
 
 const GAP_X = 200
@@ -29,6 +30,7 @@ function stackColumn(list: Node[], colIndex: number): Node[] {
 export function layoutBowtie(nodes: Node[]): Node[] {
   const byType = {
     hazard: [] as Node[],
+    cause: [] as Node[],
     barrierPreventive: [] as Node[],
     topEvent: [] as Node[],
     barrierMitigative: [] as Node[],
@@ -42,6 +44,7 @@ export function layoutBowtie(nodes: Node[]): Node[] {
 
   const ordered: Node[] = [
     ...stackColumn(byType.hazard, COL.hazard),
+    ...stackColumn(byType.cause, COL.cause),
     ...stackColumn(byType.barrierPreventive, COL.barrierPreventive),
     ...stackColumn(byType.topEvent, COL.topEvent),
     ...stackColumn(byType.barrierMitigative, COL.barrierMitigative),

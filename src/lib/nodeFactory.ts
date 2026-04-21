@@ -2,6 +2,7 @@ import type { Node } from '@xyflow/react'
 
 export type StudioNodeType =
   | 'hazard'
+  | 'cause'
   | 'barrierPreventive'
   | 'topEvent'
   | 'barrierMitigative'
@@ -9,9 +10,10 @@ export type StudioNodeType =
 
 const defaultLabels: Record<StudioNodeType, string> = {
   hazard: 'Nuevo peligro',
-  barrierPreventive: 'Barrera preventiva',
-  topEvent: 'Evento superior',
-  barrierMitigative: 'Barrera mitigadora',
+  cause: 'Nueva causa',
+  barrierPreventive: 'Control preventivo',
+  topEvent: 'Evento Top',
+  barrierMitigative: 'Control mitigador',
   consequence: 'Consecuencia',
 }
 

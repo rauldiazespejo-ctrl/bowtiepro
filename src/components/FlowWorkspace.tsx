@@ -42,6 +42,7 @@ import {
 import {
   BarrierMitigativeNode,
   BarrierPreventiveNode,
+  CauseNode,
   ConsequenceNode,
   HazardNode,
   TopEventNode,
@@ -57,6 +58,7 @@ import { cn } from '../lib/cn'
 
 const VALID_NODE_TYPES = new Set([
   'hazard',
+  'cause',
   'barrierPreventive',
   'topEvent',
   'barrierMitigative',
@@ -65,6 +67,7 @@ const VALID_NODE_TYPES = new Set([
 
 const nodeTypes = {
   hazard: HazardNode,
+  cause: CauseNode,
   barrierPreventive: BarrierPreventiveNode,
   topEvent: TopEventNode,
   barrierMitigative: BarrierMitigativeNode,
@@ -73,9 +76,10 @@ const nodeTypes = {
 
 const NODE_TYPE_LABELS: Record<string, string> = {
   hazard: 'Peligro',
-  barrierPreventive: 'Barrera preventiva',
-  topEvent: 'Evento superior',
-  barrierMitigative: 'Barrera mitigadora',
+  cause: 'Causa',
+  barrierPreventive: 'Control preventivo',
+  topEvent: 'Evento Top',
+  barrierMitigative: 'Control mitigador',
   consequence: 'Consecuencia',
 }
 
@@ -120,9 +124,10 @@ function AddNodeMenu({ onAdd }: { onAdd: (t: StudioNodeType) => void }) {
 
   const items: { type: StudioNodeType; label: string }[] = [
     { type: 'hazard', label: 'Peligro' },
-    { type: 'barrierPreventive', label: 'Barrera preventiva' },
-    { type: 'topEvent', label: 'Evento superior' },
-    { type: 'barrierMitigative', label: 'Barrera mitigadora' },
+    { type: 'cause', label: 'Causa' },
+    { type: 'barrierPreventive', label: 'Control preventivo' },
+    { type: 'topEvent', label: 'Evento Top' },
+    { type: 'barrierMitigative', label: 'Control mitigador' },
     { type: 'consequence', label: 'Consecuencia' },
   ]
 

@@ -2,6 +2,7 @@ import type { Edge, Node } from '@xyflow/react'
 
 export type DiagramStats = {
   hazards: number
+  causes: number
   barriersPreventive: number
   barriersMitigative: number
   topEvents: number
@@ -22,6 +23,7 @@ function countType(nodes: Node[], t: string) {
 export function validateDiagram(nodes: Node[], edges: Edge[]): DiagramValidation {
   const stats: DiagramStats = {
     hazards: countType(nodes, 'hazard'),
+    causes: countType(nodes, 'cause'),
     barriersPreventive: countType(nodes, 'barrierPreventive'),
     barriersMitigative: countType(nodes, 'barrierMitigative'),
     topEvents: countType(nodes, 'topEvent'),
@@ -38,10 +40,11 @@ export function validateDiagram(nodes: Node[], edges: Edge[]): DiagramValidation
     }
   }
 
-  if (stats.topEvents === 0) warnings.push('Falta al menos un evento superior (nudo del bowtie).')
-  if (stats.topEvents > 1) warnings.push('Varios eventos superiores: revisa coherencia del escenario.')
-  if (stats.hazards === 0) warnings.push('No hay peligros modelados a la izquierda del evento.')
-  if (stats.consequences === 0) warnings.push('No hay consecuencias a la derecha del evento.')
+  if (stats.topEvents === 0) warnings.push('Falta el Evento Top (nudo central del bowtie).')
+  if (stats.topEvents > 1) warnings.push('Varios Eventos Top: revisa coherencia del escenario.')
+  if (stats.hazards === 0) warnings.push('No hay peligro modelado (fuente del riesgo).')
+  if (stats.causes === 0) warnings.push('No hay causas/amenazas modeladas a la izquierda del Evento Top.')
+  if (stats.consequences === 0) warnings.push('No hay consecuencias modeladas a la derecha del Evento Top.')
 
   const connected = new Set<string>()
   for (const e of edges) {
