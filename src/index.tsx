@@ -19,7 +19,22 @@ app.onError((err, c) => {
     return c.json({ error: err.message, code: 'DB_NOT_CONFIGURED' }, 503)
   }
   console.error('[bowtie]', err)
-  return c.json({ error: 'Error interno del servidor' }, 500)
+  const isDev = import.meta.env.DEV
+  return c.json({ error: isDev ? String(err) : 'Error interno del servidor', detail: isDev ? err.stack : undefined }, 500)
+})
+
+app.get('/api/health', async (c) => {
+  const url = process.env.LIBSQL_URL || process.env.TURSO_DATABASE_URL || 'not-set'
+  const hasToken = !!(process.env.LIBSQL_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN)
+  const dbEnvKeys = Object.keys(process.env).filter(k => k.includes('LIBSQL') || k.includes('TURSO') || k.includes('DATABASE'))
+  try {
+    const { getLibsqlSqlClientSingleton } = await import('./server/db')
+    const sql = getLibsqlSqlClientSingleton()
+    await sql.execute({ sql: 'SELECT 1', args: [] })
+    return c.json({ ok: true, url: url.slice(0, 30) + '…', hasToken, dbEnvKeys })
+  } catch (e) {
+    return c.json({ ok: false, url: url.slice(0, 30) + '…', hasToken, dbEnvKeys, error: String(e) }, 503)
+  }
 })
 
 /** D1 en Cloudflare Pages (automático) o libsql/Turso/local en el resto. */

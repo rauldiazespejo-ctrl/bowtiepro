@@ -1,8 +1,27 @@
 import type { Context } from 'hono'
-import { createClient, type Client } from '@libsql/client'
+import bcrypt from 'bcryptjs'
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import bcrypt from 'bcryptjs'
+import { createClient as createWebClient } from '@libsql/client/web'
+
+type CreateClientFn = typeof import('@libsql/client').createClient
+type Client = import('@libsql/client').Client
+
+function normalizeLibsqlUrl(url: string): string {
+  if (url.startsWith('libsql://')) return url.replace('libsql://', 'https://')
+  if (url.startsWith('wss://')) return url.replace('wss://', 'https://')
+  return url
+}
+
+async function loadCreateClient(): Promise<CreateClientFn> {
+  const url = process.env.LIBSQL_URL || process.env.TURSO_DATABASE_URL || ''
+  const isRemote = url.startsWith('libsql://') || url.startsWith('https://') || url.startsWith('wss://')
+  if (isRemote) {
+    return createWebClient as unknown as CreateClientFn
+  }
+  const m = await import('@libsql/client')
+  return m.createClient
+}
 
 const SUPER_EMAIL = (process.env.SUPER_ADMIN_EMAIL ?? 'rauldiazespejo@gmail.com').toLowerCase()
 const SUPER_DEFAULT_PASSWORD = process.env.SUPER_ADMIN_PASSWORD ?? 'bowtie28'
@@ -26,6 +45,7 @@ export type D1Database = {
 }
 
 let libsqlClient: Client | null = null
+let libsqlClientPromise: Promise<Client> | null = null
 let libsqlInitPromise: Promise<void> | null = null
 
 /** Workers (p. ej. Cloudflare) no pueden usar SQLite en disco sin D1 ni Turso. */
@@ -54,46 +74,40 @@ function isEdgeWorkerWithoutNodeFs(): boolean {
 
 function requiresRemoteLibsqlUrl(): boolean {
   if (process.env.CF_PAGES === '1') return true
+  if (process.env.VERCEL === '1') return true
   return isEdgeWorkerWithoutNodeFs()
 }
 
-export function getLibsqlUrl(): string {
-  const fromEnv = process.env.LIBSQL_URL ?? process.env.TURSO_DATABASE_URL
-  if (fromEnv) return fromEnv
-  if (requiresRemoteLibsqlUrl()) {
-    throw new DatabaseNotConfiguredError()
-  }
-  const dir = join(process.cwd(), '.data')
-  try {
-    mkdirSync(dir, { recursive: true })
-  } catch {
-    /* exists */
-  }
-  return `file:${join(dir, 'bowtie.db')}`
-}
 
-function getLibsqlRawClient(): Client {
-  if (!libsqlClient) {
-    libsqlClient = createClient({
-      url: getLibsqlUrl(),
-      authToken: process.env.LIBSQL_AUTH_TOKEN ?? process.env.TURSO_AUTH_TOKEN,
-    })
+async function getLibsqlRawClientAsync(): Promise<Client> {
+  if (libsqlClient) return libsqlClient
+  if (!libsqlClientPromise) {
+    libsqlClientPromise = (async () => {
+      const createClient = await loadCreateClient()
+      const url = (() => {
+        const fromEnv = process.env.LIBSQL_URL || process.env.TURSO_DATABASE_URL
+        if (fromEnv) return fromEnv
+        if (requiresRemoteLibsqlUrl()) throw new DatabaseNotConfiguredError()
+        const dir = join(process.cwd(), '.data')
+        try { mkdirSync(dir, { recursive: true }) } catch { /* exists */ }
+        return `file:${join(dir, 'bowtie.db')}`
+      })()
+      libsqlClient = createClient({ url: normalizeLibsqlUrl(url), authToken: process.env.LIBSQL_AUTH_TOKEN ?? process.env.TURSO_AUTH_TOKEN })
+      return libsqlClient
+    })()
   }
-  return libsqlClient
-}
-
-function wrapLibsql(client: Client): SqlClient {
-  return {
-    async execute(input) {
-      const r = await client.execute({ sql: input.sql, args: input.args ?? [] })
-      return { rows: r.rows as Record<string, unknown>[] }
-    },
-  }
+  return libsqlClientPromise
 }
 
 /** Singleton libsql para desarrollo local / Node. */
 export function getLibsqlSqlClientSingleton(): SqlClient {
-  return wrapLibsql(getLibsqlRawClient())
+  return {
+    async execute(input) {
+      const client = await getLibsqlRawClientAsync()
+      const r = await client.execute({ sql: input.sql, args: input.args ?? [] })
+      return { rows: r.rows as Record<string, unknown>[] }
+    },
+  }
 }
 
 export function createD1SqlClient(db: D1Database): SqlClient {

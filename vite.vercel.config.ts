@@ -11,9 +11,17 @@ export default defineConfig({
       emptyOutDir: true,
       vercel: {
         name: '__hono',
+        function: {
+          runtime: 'nodejs22.x',
+        },
       },
     }),
     tailwindcss(),
     react(),
   ],
+  build: {
+    rollupOptions: {
+      external: [/^@libsql\/client$/],
+    },
+  },
 })
