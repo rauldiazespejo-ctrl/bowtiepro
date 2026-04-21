@@ -40,3 +40,17 @@
 ### [x] Step 6: CSS & final polish (src/client.css + src/pages/LoginPage.tsx)
 - Added `@keyframes fadeIn` + `.animate-fade-in` for canvas fade-in
 - LoginPage updated to use shared BowtieMark (no more duplicate SVG filter IDs)
+
+### [x] Step 7: Logo, favicon, OG image, meta tags
+- Created professional bowtie logo (public/logo.png), favicon.svg, og-image.png
+- Updated src/index.tsx HTML template with full meta/OG/Twitter tags
+
+### [x] Step 8: GitHub push + Vercel deployment
+- All commits pushed to main at github.com/rauldiazespejo-ctrl/bowtiepro
+- Vercel project linked: revisa-este-software-y-dame-idea-c1f7 (prj_MyyUBzNYJmX4yn56eWVKRuodOkRv)
+- .github/workflows/deploy-vercel.yml CI/CD workflow created
+- vite.vercel.config.ts: Rollup regex external for @libsql/client, nodejs22.x runtime pinned
+- scripts/copy-vercel-public.mjs: copies assets + all @libsql transitive deps to function dir
+- src/server/db.ts: uses || instead of ?? for empty string env vars, VERCEL detection
+- Deployed to: https://revisa-este-software-y-dame-idea-c1.vercel.app
+- Status: function starts correctly, returns JSON; DB pending real Turso credentials in Vercel env vars
