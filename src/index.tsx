@@ -47,7 +47,23 @@ app.get('*', (c) => {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Bowtie Studio</title>
+        <title>Bowtie Studio Pro — Editor HSE profesional</title>
+        <meta name="description" content="Editor profesional de diagramas bowtie para análisis de riesgos HSE. Colaboración en tiempo real, plantillas y más." />
+        <meta name="theme-color" content="#0ea5e9" />
+
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Bowtie Studio Pro" />
+        <meta property="og:description" content="Editor profesional de diagramas bowtie para procesos HSE" />
+        <meta property="og:image" content="/og-image.png" />
+        <meta property="og:url" content="https://bowtiepro.netlify.app" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Bowtie Studio Pro" />
+        <meta name="twitter:description" content="Editor profesional de diagramas bowtie para procesos HSE" />
+        <meta name="twitter:image" content="/og-image.png" />
         ${
           import.meta.env.PROD
             ? `<link rel="stylesheet" href="/static/assets/style.css">`
