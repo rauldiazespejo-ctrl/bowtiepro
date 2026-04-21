@@ -25,23 +25,40 @@
     "cf:provision": "node scripts/provision-d1.mjs",
     "build:client": "vite build -c vite.client.config.ts",
     "desktop": "electron .",
-    "desktop:build": "electron-builder --publish never"
+    "build:desktop": "node scripts/build-desktop.mjs",
+    "desktop:pack": "electron-builder --publish never",
+    "desktop:build": "npm run build:desktop && npm run desktop:pack"
   },
   "build": {
     "appId": "com.pulsoai.bowtie-studio",
     "productName": "Bowtie Studio Pro",
     "copyright": "Copyright © PULSO-AI",
-    "files": ["electron/**/*", "package.json"],
+    "files": [
+      "electron/**/*",
+      "dist/desktop/**/*",
+      "package.json"
+    ],
     "directories": { "output": "release" },
+    "npmRebuild": true,
     "mac": {
       "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"],
+      "icon": "public/logo.png",
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
       "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
     },
-    "win": { "target": ["portable"] },
-    "linux": { "target": ["AppImage"] }
+    "win": {
+      "icon": "public/logo.png",
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "linux": { "target": ["AppImage"] },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/logo.png",
+      "uninstallerIcon": "public/logo.png"
+    }
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",
