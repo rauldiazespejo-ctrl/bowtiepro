@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run build:client",
-    "build:vercel": "vite build -c vite.vercel.config.ts && vite build -c vite.client.vercel.config.ts",
+    "build:vercel": "vite build -c vite.vercel.config.ts && vite build -c vite.client.vercel.config.ts && node scripts/copy-vercel-public.mjs",
     "build:netlify": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build -c vite.netlify.config.ts && vite build -c vite.client.config.ts && node scripts/copy-public.mjs",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",

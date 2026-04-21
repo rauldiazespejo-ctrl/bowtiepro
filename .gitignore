@@ -34,8 +34,9 @@ logs/
 .wrangler/
 dist/
 
-# Vercel (Build Output API)
-.vercel/
+# Vercel (Build Output API — solo ignorar output, no el link del proyecto)
+.vercel/output/
+!.vercel/project.json
 
 # Netlify Functions (generadas en build; no versionar)
 netlify/functions/
