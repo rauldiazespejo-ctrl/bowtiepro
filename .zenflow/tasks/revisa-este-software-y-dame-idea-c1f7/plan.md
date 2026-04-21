@@ -54,3 +54,11 @@
 - src/server/db.ts: uses || instead of ?? for empty string env vars, VERCEL detection
 - Deployed to: https://revisa-este-software-y-dame-idea-c1.vercel.app
 - Status: function starts correctly, returns JSON; DB pending real Turso credentials in Vercel env vars
+
+### [x] Step 9: Bowtie model correction + URL alias
+- Added CauseNode (violet) between Peligro and Controles Preventivos
+- layout.ts: 6-column layout (hazard → cause → barrierPreventive → topEvent → barrierMitigative → consequence)
+- All 4 templates restructured: Peligro → Causas → CP → Evento Top → CM → Consecuencias
+- validateDiagram.ts, FlowWorkspace.tsx, nodeFactory.ts, StudioNodes.tsx all updated
+- Production URL alias: https://bowtie-hse.vercel.app
+- Also available at: https://revisa-este-software-y-dame-idea-c1.vercel.app
