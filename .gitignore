@@ -40,3 +40,6 @@ dist/
 
 # Netlify Functions (generadas en build; no versionar)
 netlify/functions/
+*.db
+*.db-wal
+*.db-shm
